@@ -20,11 +20,20 @@ export const saveGames = (games: Game[]): void => {
   }
 };
 
+const generateId = (): string => {
+  // Use crypto.randomUUID() if available, otherwise fall back to a simple implementation
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback: generate a random ID
+  return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+};
+
 export const addGame = (game: Omit<Game, 'id' | 'timestamp'>): Game => {
   const games = getGames();
   const newGame: Game = {
     ...game,
-    id: crypto.randomUUID(),
+    id: generateId(),
     timestamp: Date.now(),
   };
   games.push(newGame);

@@ -1,73 +1,78 @@
-# React + TypeScript + Vite
+# Pinball Coach
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A lightweight mobile-first web application to help track personal pinball stats and strategies.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Game Entry**: Log games with venue, table, scores, and notes
+- **Dashboard**: View win rate, stats by table/venue, and high scores
+- **Game History**: Browse all games with the ability to delete entries
+- **Data Persistence**: All data stored locally in your browser
+- **Mobile-First Design**: Optimized for mobile devices with responsive layout
+- **Dark Theme**: Easy on the eyes with gray-900/800 color scheme
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + TypeScript
+- Vite 7
+- Tailwind CSS v4
+- localStorage for data persistence
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+The app will be available at `http://localhost:5173/`
+
+### Build
+
+```bash
+npm run build
+```
+
+The production build will be created in the `dist` directory.
+
+## Usage
+
+### Adding a Game
+
+1. Click "Add Game" in the navigation
+2. Select or add a venue and table
+3. Choose game type (Competitive or Practice)
+4. Enter scores
+5. Optionally add notes
+6. Click "Save Game"
+
+### Viewing Stats
+
+The Dashboard shows:
+- Overall statistics (total games, win rate, wins, losses)
+- Top 5 high scores
+- Performance by table
+- Performance by venue
+
+### Managing Games
+
+View all games in the History tab. Each game can be deleted with a confirmation prompt.
+
+## Data Model
+
+Each game stores:
+- `venue`: Location where the game was played
+- `table`: Pinball table/machine name
+- `myScore`: Your score
+- `opponentScore`: Opponent's score (for competitive games)
+- `gameType`: Either "competitive" or "practice"
+- `result`: Automatically calculated as "win", "loss", or "practice"
+- `notes`: Optional notes about the game
+- `timestamp`: When the game was recorded
