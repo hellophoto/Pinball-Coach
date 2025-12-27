@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { GameType, PinballMapLocation } from '../types';
-import { addGame, getGames, getSettings } from '../utils';
+import { addGame, getGames, getSettings, saveGames } from '../utils';
 import { StrategyCard } from './StrategyCard';
 import { getPinballMapLocations } from '../services/pinballMapService';
 import { fetchPercentileWithTimeout } from '../services/pinScoresService';
@@ -108,12 +108,12 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     fetchPercentileWithTimeout(finalTable, myScoreNum)
       .then(percentile => {
         if (percentile !== null) {
-          // Update the game with percentile
-          const games = getGames();
-          const gameIndex = games.findIndex(g => g.id === newGame.id);
+          // Update the game with percentile using the existing utility
+          const allGames = getGames();
+          const gameIndex = allGames.findIndex(g => g.id === newGame.id);
           if (gameIndex !== -1) {
-            games[gameIndex].percentile = percentile;
-            localStorage.setItem('pinball-coach-games', JSON.stringify(games));
+            allGames[gameIndex].percentile = percentile;
+            saveGames(allGames);
           }
         }
       })

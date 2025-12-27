@@ -87,11 +87,15 @@ export const fetchPinballMapLocations = async (
 
 /**
  * Get cached Pinball Map locations or fetch from API
+ * @param city - City name for filtering locations
+ * @param _state - State (reserved for future use)
+ * @param _radius - Search radius (reserved for future use)
+ * @param forceRefresh - Force refresh cache
  */
 export const getPinballMapLocations = async (
   city?: string,
-  state?: string,
-  radius?: number,
+  _state?: string,
+  _radius?: number,
   forceRefresh: boolean = false
 ): Promise<PinballMapLocation[]> => {
   // Check cache first

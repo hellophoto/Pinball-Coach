@@ -4,6 +4,15 @@ const STORAGE_KEY = 'pinball-coach-games';
 const STRATEGIES_KEY = 'pinball-coach-table-strategies';
 const SETTINGS_KEY = 'pinball-coach-settings';
 
+// Default settings
+const DEFAULT_SETTINGS: Settings = {
+  location: {
+    city: 'Portland',
+    state: 'OR',
+    radius: 25,
+  },
+};
+
 export const getGames = (): Game[] => {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -102,23 +111,10 @@ export const getSettings = (): Settings => {
     if (data) {
       return JSON.parse(data);
     }
-    // Return default settings
-    return {
-      location: {
-        city: 'Portland',
-        state: 'OR',
-        radius: 25,
-      },
-    };
+    return DEFAULT_SETTINGS;
   } catch (error) {
     console.error('Error loading settings:', error);
-    return {
-      location: {
-        city: 'Portland',
-        state: 'OR',
-        radius: 25,
-      },
-    };
+    return DEFAULT_SETTINGS;
   }
 };
 
