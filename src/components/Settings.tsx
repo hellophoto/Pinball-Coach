@@ -136,26 +136,44 @@ export const Settings: React.FC = () => {
     <div className="space-y-6">
       {/* Location Settings Section */}
       <div>
-        <h2 className="text-2xl font-bold text-white mb-4">Pinball Map Settings</h2>
+        <h2 className="text-2xl font-bold mb-4" style={{ 
+          color: 'var(--neon-cyan)',
+          textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
+        }}>Pinball Map Settings</h2>
         
         {locationMessage && (
-          <div className={`mb-4 rounded-lg p-4 ${
+          <div className={`mb-4 rounded-lg p-4 border-2 ${
             locationMessage.includes('Error')
-              ? 'bg-red-900/30 border border-red-600 text-red-200'
-              : 'bg-green-900/30 border border-green-600 text-green-200'
-          }`}>
-            <p className="text-sm">{locationMessage}</p>
+              ? ''
+              : ''
+          }`} style={{
+            background: locationMessage.includes('Error') 
+              ? 'rgba(255, 0, 102, 0.2)' 
+              : 'rgba(0, 255, 136, 0.2)',
+            borderColor: locationMessage.includes('Error') 
+              ? '#ff0066' 
+              : '#00ff88',
+            boxShadow: locationMessage.includes('Error')
+              ? '0 0 10px rgba(255, 0, 102, 0.5)'
+              : '0 0 10px rgba(0, 255, 136, 0.5)'
+          }}>
+            <p className="text-sm" style={{ 
+              color: locationMessage.includes('Error') ? '#ff0066' : '#00ff88' 
+            }}>{locationMessage}</p>
           </div>
         )}
         
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-white mb-4">Location Configuration</h3>
+        <div className="card-synthwave rounded-lg p-6 shadow-lg">
+          <h3 className="text-lg font-semibold mb-4" style={{ 
+            color: 'var(--neon-magenta)',
+            textShadow: '0 0 10px var(--neon-magenta)'
+          }}>Location Configuration</h3>
           
           <div className="space-y-4">
             {/* City */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-gray-300 mb-2 text-sm">City</label>
+                <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>City</label>
                 <input
                   type="text"
                   value={settings.location.city || ''}
@@ -164,13 +182,13 @@ export const Settings: React.FC = () => {
                     location: { ...settings.location, city: e.target.value }
                   })}
                   placeholder="Portland"
-                  className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full input-synthwave rounded px-4 py-2"
                 />
               </div>
               
               {/* State */}
               <div>
-                <label className="block text-gray-300 mb-2 text-sm">State</label>
+                <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>State</label>
                 <input
                   type="text"
                   value={settings.location.state || ''}
@@ -179,14 +197,14 @@ export const Settings: React.FC = () => {
                     location: { ...settings.location, state: e.target.value }
                   })}
                   placeholder="OR"
-                  className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full input-synthwave rounded px-4 py-2"
                 />
               </div>
             </div>
             
             {/* ZIP Code */}
             <div>
-              <label className="block text-gray-300 mb-2 text-sm">ZIP Code (Optional)</label>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>ZIP Code (Optional)</label>
               <input
                 type="text"
                 value={settings.location.zipCode || ''}
@@ -195,20 +213,20 @@ export const Settings: React.FC = () => {
                   location: { ...settings.location, zipCode: e.target.value }
                 })}
                 placeholder="97205"
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full input-synthwave rounded px-4 py-2"
               />
             </div>
             
             {/* Radius */}
             <div>
-              <label className="block text-gray-300 mb-2 text-sm">Search Radius (miles)</label>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>Search Radius (miles)</label>
               <select
                 value={settings.location.radius}
                 onChange={(e) => setSettingsState({
                   ...settings,
                   location: { ...settings.location, radius: parseInt(e.target.value) }
                 })}
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full input-synthwave rounded px-4 py-2"
               >
                 <option value="5">5 miles</option>
                 <option value="10">10 miles</option>
@@ -223,22 +241,22 @@ export const Settings: React.FC = () => {
               disabled={isUpdatingLocation}
               className={`w-full font-semibold py-3 rounded-lg transition ${
                 isUpdatingLocation
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'opacity-50 cursor-not-allowed bg-gray-700 border-2 border-gray-600 text-gray-400'
+                  : 'button-primary'
               }`}
             >
               {isUpdatingLocation ? '🔄 Updating...' : '📍 Update Location'}
             </button>
             
             {/* Cache Info */}
-            <div className="bg-gray-700 rounded p-3 mt-4">
+            <div className="stat-card rounded p-3 mt-4">
               <div className="flex justify-between items-center text-sm mb-2">
-                <span className="text-gray-400">Last Updated:</span>
-                <span className="text-gray-300">{formatLastUpdated(cacheTimestamp)}</span>
+                <span style={{ color: 'var(--neon-purple)' }}>Last Updated:</span>
+                <span style={{ color: 'var(--neon-cyan)' }}>{formatLastUpdated(cacheTimestamp)}</span>
               </div>
               <button
                 onClick={handleClearCache}
-                className="w-full bg-gray-600 hover:bg-gray-500 text-white py-2 rounded font-semibold text-sm transition"
+                className="w-full button-secondary py-2 rounded font-semibold text-sm"
               >
                 🗑️ Clear Cache
               </button>
@@ -250,11 +268,14 @@ export const Settings: React.FC = () => {
       {/* Table Strategies Section */}
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-white">Table Strategies</h2>
+          <h2 className="text-2xl font-bold" style={{ 
+            color: 'var(--neon-cyan)',
+            textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
+          }}>Table Strategies</h2>
           {!isEditing && (
             <button
               onClick={handleNewStrategy}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+              className="button-primary px-4 py-2 rounded-lg font-semibold"
             >
               + Add Strategy
             </button>
@@ -263,80 +284,87 @@ export const Settings: React.FC = () => {
 
         {/* Edit/Add Form */}
         {isEditing && (
-        <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-          <h3 className="text-xl font-semibold text-white mb-4">
+        <div className="card-synthwave rounded-lg p-6 shadow-lg">
+          <h3 className="text-xl font-semibold mb-4" style={{ 
+            color: 'var(--neon-magenta)',
+            textShadow: '0 0 10px var(--neon-magenta)'
+          }}>
             {isEditing === 'new' ? 'Add New Strategy' : 'Edit Strategy'}
           </h3>
           
           {/* Error Message */}
           {errorMessage && (
-            <div className="mb-4 bg-red-900/30 border border-red-600 rounded p-3">
-              <p className="text-red-200 text-sm">{errorMessage}</p>
+            <div className="mb-4 rounded p-3 border-2" style={{
+              background: 'rgba(255, 0, 102, 0.2)',
+              borderColor: '#ff0066',
+              boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
+            }}>
+              <p className="text-sm" style={{ color: '#ff0066' }}>{errorMessage}</p>
             </div>
           )}
           
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-300 mb-2">Table Name</label>
+              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Table Name</label>
               <input
                 type="text"
                 value={editForm.table}
                 onChange={(e) => setEditForm({ ...editForm, table: e.target.value })}
                 disabled={isEditing !== 'new'}
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full input-synthwave rounded px-4 py-2 disabled:opacity-50"
                 placeholder="e.g., Medieval Madness"
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Skill Shot</label>
+              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Skill Shot</label>
               <textarea
                 value={editForm.skillShot}
                 onChange={(e) => setEditForm({ ...editForm, skillShot: e.target.value })}
                 rows={2}
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full input-synthwave rounded px-4 py-2"
                 placeholder="Describe the skill shot strategy..."
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Modes</label>
+              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Modes</label>
               <textarea
                 value={editForm.modes}
                 onChange={(e) => setEditForm({ ...editForm, modes: e.target.value })}
                 rows={3}
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full input-synthwave rounded px-4 py-2"
                 placeholder="Describe mode strategy..."
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Multiballs</label>
+              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Multiballs</label>
               <textarea
                 value={editForm.multiballs}
                 onChange={(e) => setEditForm({ ...editForm, multiballs: e.target.value })}
                 rows={2}
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full input-synthwave rounded px-4 py-2"
                 placeholder="Describe multiball strategy..."
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Tips</label>
+              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Tips</label>
               <textarea
                 value={editForm.tips}
                 onChange={(e) => setEditForm({ ...editForm, tips: e.target.value })}
                 rows={3}
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full input-synthwave rounded px-4 py-2"
                 placeholder="General gameplay tips..."
               />
             </div>
             <div className="flex gap-2">
               <button
                 onClick={handleSaveStrategy}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition"
+                className="flex-1 button-primary font-semibold py-2 rounded-lg"
               >
                 Save Strategy
               </button>
               <button
                 onClick={handleCancel}
-                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 rounded-lg transition"
+                className="flex-1 button-secondary font-semibold py-2 rounded-lg"
               >
                 Cancel
               </button>
@@ -349,20 +377,21 @@ export const Settings: React.FC = () => {
       {!isEditing && (
         <div className="space-y-3">
           {Object.keys(strategies).length === 0 ? (
-            <div className="bg-gray-800 rounded-lg p-6 text-center">
-              <p className="text-gray-400">No strategies yet. Add your first strategy!</p>
+            <div className="card-synthwave rounded-lg p-6 text-center">
+              <p style={{ color: 'var(--neon-purple)' }}>No strategies yet. Add your first strategy!</p>
             </div>
           ) : (
             Object.entries(strategies)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([tableName, strategy]) => (
-                <div key={tableName} className="bg-gray-800 rounded-lg p-4 shadow-lg">
+                <div key={tableName} className="card-synthwave rounded-lg p-4 shadow-lg">
                   <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg font-semibold text-white">{strategy.table}</h3>
+                    <h3 className="text-lg font-semibold" style={{ color: 'var(--neon-cyan)' }}>{strategy.table}</h3>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEditStrategy(tableName)}
-                        className="text-blue-400 hover:text-blue-300 p-2"
+                        className="p-2 hover-glow transition"
+                        style={{ color: 'var(--neon-cyan)' }}
                         title="Edit strategy"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,7 +400,8 @@ export const Settings: React.FC = () => {
                       </button>
                       <button
                         onClick={() => setConfirmDelete(tableName)}
-                        className="text-gray-400 hover:text-red-400 p-2"
+                        className="p-2 hover-glow transition"
+                        style={{ color: 'var(--neon-purple)' }}
                         title="Delete strategy"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -384,46 +414,55 @@ export const Settings: React.FC = () => {
                   <div className="space-y-2 text-sm">
                     {strategy.skillShot && (
                       <div>
-                        <span className="text-blue-400 font-semibold">Skill Shot: </span>
-                        <span className="text-gray-300">{strategy.skillShot}</span>
+                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Skill Shot: </span>
+                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.skillShot}</span>
                       </div>
                     )}
                     {strategy.modes && (
                       <div>
-                        <span className="text-blue-400 font-semibold">Modes: </span>
-                        <span className="text-gray-300">{strategy.modes}</span>
+                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Modes: </span>
+                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.modes}</span>
                       </div>
                     )}
                     {strategy.multiballs && (
                       <div>
-                        <span className="text-blue-400 font-semibold">Multiballs: </span>
-                        <span className="text-gray-300">{strategy.multiballs}</span>
+                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Multiballs: </span>
+                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.multiballs}</span>
                       </div>
                     )}
                     {strategy.tips && (
                       <div>
-                        <span className="text-blue-400 font-semibold">Tips: </span>
-                        <span className="text-gray-300">{strategy.tips}</span>
+                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Tips: </span>
+                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.tips}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Delete Confirmation */}
                   {confirmDelete === tableName && (
-                    <div className="mt-3 bg-red-900/30 border border-red-600 rounded p-3">
-                      <p className="text-white text-sm mb-3">
+                    <div className="mt-3 rounded p-3 border-2" style={{
+                      background: 'rgba(255, 0, 102, 0.2)',
+                      borderColor: '#ff0066',
+                      boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
+                    }}>
+                      <p className="text-sm mb-3" style={{ color: '#ff0066' }}>
                         Are you sure you want to delete this strategy?
                       </p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDeleteStrategy(tableName)}
-                           className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
+                          className="flex-1 py-2 rounded font-semibold border-2 transition"
+                          style={{
+                            background: 'rgba(255, 0, 102, 0.3)',
+                            borderColor: '#ff0066',
+                            color: '#ff0066'
+                          }}
                         >
                           Delete
                         </button>
                         <button
                           onClick={() => setConfirmDelete(null)}
-                          className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
+                          className="flex-1 button-secondary py-2 rounded font-semibold"
                         >
                           Cancel
                         </button>

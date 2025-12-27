@@ -140,28 +140,39 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-      <h2 className="text-2xl font-bold text-white mb-6">Add New Game</h2>
+    <div className="card-synthwave rounded-lg p-6 shadow-lg">
+      <h2 className="text-2xl font-bold mb-6" style={{ 
+        color: 'var(--neon-cyan)',
+        textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
+      }}>Add New Game</h2>
       
       {isFetchingPercentile && (
-        <div className="mb-4 bg-blue-900/30 border border-blue-600 rounded p-3">
-          <p className="text-blue-200 text-sm">🔄 Fetching percentile ranking from PinScores...</p>
+        <div className="mb-4 rounded p-3 border-2" style={{
+          background: 'rgba(0, 255, 255, 0.1)',
+          borderColor: 'var(--neon-cyan)',
+          boxShadow: '0 0 10px var(--neon-cyan)'
+        }}>
+          <p className="text-sm" style={{ color: 'var(--neon-cyan)' }}>
+            🔄 Fetching percentile ranking from PinScores...
+          </p>
         </div>
       )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Venue */}
         <div>
-          <label className="block text-gray-300 mb-2">
+          <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>
             Venue
-            {isLoadingLocations && <span className="ml-2 text-sm text-gray-400">(Loading Pinball Map data...)</span>}
+            {isLoadingLocations && <span className="ml-2 text-sm" style={{ color: 'var(--neon-purple)' }}>
+              (Loading Pinball Map data...)
+            </span>}
           </label>
           {!showCustomVenue ? (
             <div className="flex gap-2">
               <select
                 value={venue}
                 onChange={(e) => setVenue(e.target.value)}
-                className="flex-1 bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 input-synthwave rounded px-4 py-2"
               >
                 <option value="">Select venue...</option>
                 {allVenues.map(v => (
@@ -171,7 +182,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
               <button
                 type="button"
                 onClick={() => setShowCustomVenue(true)}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 button-secondary rounded"
               >
                 New
               </button>
@@ -183,12 +194,12 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 value={customVenue}
                 onChange={(e) => setCustomVenue(e.target.value)}
                 placeholder="Enter new venue..."
-                className="flex-1 bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 input-synthwave rounded px-4 py-2"
               />
               <button
                 type="button"
                 onClick={() => setShowCustomVenue(false)}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 button-secondary rounded"
               >
                 Cancel
               </button>
@@ -198,8 +209,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
 
         {/* Available Tables from Pinball Map */}
         {selectedLocation && selectedLocation.machines.length > 0 && (
-          <div className="bg-gray-700 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-blue-400 mb-2">
+          <div className="stat-card rounded-lg p-4">
+            <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--neon-cyan)' }}>
               📍 Available Tables at {selectedLocation.name}
             </h3>
             <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
@@ -211,11 +222,22 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                     setTable(machine.name);
                     setShowCustomTable(false);
                   }}
-                  className={`text-left px-3 py-2 rounded text-sm transition ${
+                  className={`text-left px-3 py-2 rounded text-sm transition border-2 ${
                     table === machine.name
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+                      ? 'border-cyan-400'
+                      : 'border-purple-600'
                   }`}
+                  style={{
+                    background: table === machine.name 
+                      ? 'rgba(0, 255, 255, 0.2)' 
+                      : 'rgba(139, 0, 255, 0.1)',
+                    color: table === machine.name 
+                      ? 'var(--neon-cyan)' 
+                      : 'var(--neon-purple)',
+                    boxShadow: table === machine.name 
+                      ? '0 0 10px var(--neon-cyan)' 
+                      : 'none'
+                  }}
                 >
                   {machine.name}
                 </button>
@@ -226,13 +248,13 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
 
         {/* Table */}
         <div>
-          <label className="block text-gray-300 mb-2">Table</label>
+          <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Table</label>
           {!showCustomTable ? (
             <div className="flex gap-2">
               <select
                 value={table}
                 onChange={(e) => setTable(e.target.value)}
-                className="flex-1 bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 input-synthwave rounded px-4 py-2"
               >
                 <option value="">Select table...</option>
                 {existingTables.map(t => (
@@ -242,7 +264,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
               <button
                 type="button"
                 onClick={() => setShowCustomTable(true)}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 button-secondary rounded"
               >
                 New
               </button>
@@ -254,12 +276,12 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 value={customTable}
                 onChange={(e) => setCustomTable(e.target.value)}
                 placeholder="Enter new table..."
-                className="flex-1 bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 input-synthwave rounded px-4 py-2"
               />
               <button
                 type="button"
                 onClick={() => setShowCustomTable(false)}
-                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600"
+                className="px-4 py-2 button-secondary rounded"
               >
                 Cancel
               </button>
@@ -274,7 +296,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
 
         {/* Game Type */}
         <div>
-          <label className="block text-gray-300 mb-2">Game Type</label>
+          <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Game Type</label>
           <div className="flex gap-4">
             <label className="flex items-center">
               <input
@@ -284,7 +306,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 onChange={(e) => setGameType(e.target.value as GameType)}
                 className="mr-2"
               />
-              <span className="text-white">Competitive</span>
+              <span style={{ color: 'var(--neon-cyan)' }}>Competitive</span>
             </label>
             <label className="flex items-center">
               <input
@@ -294,7 +316,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 onChange={(e) => setGameType(e.target.value as GameType)}
                 className="mr-2"
               />
-              <span className="text-white">Practice</span>
+              <span style={{ color: 'var(--neon-cyan)' }}>Practice</span>
             </label>
           </div>
         </div>
@@ -302,24 +324,24 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
         {/* Scores */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-300 mb-2">My Score</label>
+            <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>My Score</label>
             <input
               type="number"
               value={myScore}
               onChange={(e) => setMyScore(e.target.value)}
               placeholder="0"
-              className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full input-synthwave rounded px-4 py-2"
             />
           </div>
           {gameType === 'competitive' && (
             <div>
-              <label className="block text-gray-300 mb-2">Opponent Score</label>
+              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Opponent Score</label>
               <input
                 type="number"
                 value={opponentScore}
                 onChange={(e) => setOpponentScore(e.target.value)}
                 placeholder="0"
-                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full input-synthwave rounded px-4 py-2"
               />
             </div>
           )}
@@ -327,20 +349,20 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
 
         {/* Notes */}
         <div>
-          <label className="block text-gray-300 mb-2">Notes (optional)</label>
+          <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Notes (optional)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add any notes about the game..."
             rows={3}
-            className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full input-synthwave rounded px-4 py-2"
           />
         </div>
 
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+          className="w-full button-primary font-semibold py-3 rounded-lg"
         >
           Save Game
         </button>

@@ -1,1 +1,137 @@
 @import "tailwindcss";
+
+/* Synthwave Theme Variables */
+:root {
+  --neon-magenta: #FF00FF;
+  --neon-cyan: #00FFFF;
+  --neon-yellow: #FFFF00;
+  --neon-pink: #FF0080;
+  --neon-purple: #8B00FF;
+  --dark-bg: #0a0015;
+  --dark-card: #150025;
+  --dark-overlay: rgba(10, 0, 21, 0.9);
+}
+
+/* Base styling with retro font */
+body {
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(180deg, #0a0015 0%, #1a0033 50%, #0a0015 100%);
+  background-attachment: fixed;
+  position: relative;
+  min-height: 100vh;
+}
+
+/* CRT Screen Effect - Scanlines */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 255, 255, 0.03) 0px,
+    transparent 1px,
+    transparent 2px,
+    rgba(0, 255, 255, 0.03) 3px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(10px);
+  }
+}
+
+/* CRT Screen Effect - Vignette */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 70%,
+    rgba(10, 0, 21, 0.7) 100%
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Neon glow utility classes */
+.neon-glow-magenta {
+  box-shadow: 
+    0 0 10px var(--neon-magenta),
+    0 0 20px var(--neon-magenta),
+    0 0 30px var(--neon-magenta),
+    inset 0 0 10px rgba(255, 0, 255, 0.2);
+}
+
+.neon-glow-cyan {
+  box-shadow: 
+    0 0 10px var(--neon-cyan),
+    0 0 20px var(--neon-cyan),
+    0 0 30px var(--neon-cyan),
+    inset 0 0 10px rgba(0, 255, 255, 0.2);
+}
+
+.neon-glow-purple {
+  box-shadow: 
+    0 0 10px var(--neon-purple),
+    0 0 20px var(--neon-purple),
+    0 0 30px var(--neon-purple),
+    inset 0 0 10px rgba(139, 0, 255, 0.2);
+}
+
+.neon-border-magenta {
+  border: 2px solid var(--neon-magenta);
+}
+
+.neon-border-cyan {
+  border: 2px solid var(--neon-cyan);
+}
+
+.neon-border-purple {
+  border: 2px solid var(--neon-purple);
+}
+
+/* Pulse animation for interactive elements */
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 5px currentColor);
+  }
+  50% {
+    filter: brightness(1.3) drop-shadow(0 0 20px currentColor);
+  }
+}
+
+.neon-pulse {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+/* Hover glow effect */
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  filter: brightness(1.2);
+  transform: translateY(-2px);
+}
+
+/* Glassmorphism effect */
+.glass-effect {
+  background: rgba(21, 0, 37, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}

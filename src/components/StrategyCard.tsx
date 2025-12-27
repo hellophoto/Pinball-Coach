@@ -14,14 +14,15 @@ export const StrategyCard: React.FC<StrategyCardProps> = ({ tableName }) => {
   }
 
   return (
-    <div className="bg-gray-700 rounded-lg overflow-hidden">
+    <div className="stat-card rounded-lg overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-600 transition"
+        className="w-full px-4 py-3 flex items-center justify-between text-left hover-glow transition"
       >
-        <span className="text-white font-semibold">📋 View Strategy</span>
+        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>📋 View Strategy</span>
         <svg
-          className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          style={{ color: 'var(--neon-purple)' }}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -34,26 +35,38 @@ export const StrategyCard: React.FC<StrategyCardProps> = ({ tableName }) => {
         <div className="px-4 pb-4 space-y-3">
           {strategy.skillShot && (
             <div>
-              <div className="text-blue-400 font-semibold text-sm mb-1">Skill Shot</div>
-              <div className="text-gray-300 text-sm">{strategy.skillShot}</div>
+              <div className="font-semibold text-sm mb-1" style={{ 
+                color: 'var(--neon-cyan)',
+                textShadow: '0 0 10px var(--neon-cyan)'
+              }}>Skill Shot</div>
+              <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>{strategy.skillShot}</div>
             </div>
           )}
           {strategy.modes && (
             <div>
-              <div className="text-blue-400 font-semibold text-sm mb-1">Modes</div>
-              <div className="text-gray-300 text-sm">{strategy.modes}</div>
+              <div className="font-semibold text-sm mb-1" style={{ 
+                color: 'var(--neon-cyan)',
+                textShadow: '0 0 10px var(--neon-cyan)'
+              }}>Modes</div>
+              <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>{strategy.modes}</div>
             </div>
           )}
           {strategy.multiballs && (
             <div>
-              <div className="text-blue-400 font-semibold text-sm mb-1">Multiballs</div>
-              <div className="text-gray-300 text-sm">{strategy.multiballs}</div>
+              <div className="font-semibold text-sm mb-1" style={{ 
+                color: 'var(--neon-cyan)',
+                textShadow: '0 0 10px var(--neon-cyan)'
+              }}>Multiballs</div>
+              <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>{strategy.multiballs}</div>
             </div>
           )}
           {strategy.tips && (
             <div>
-              <div className="text-blue-400 font-semibold text-sm mb-1">Tips</div>
-              <div className="text-gray-300 text-sm">{strategy.tips}</div>
+              <div className="font-semibold text-sm mb-1" style={{ 
+                color: 'var(--neon-cyan)',
+                textShadow: '0 0 10px var(--neon-cyan)'
+              }}>Tips</div>
+              <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>{strategy.tips}</div>
             </div>
           )}
         </div>

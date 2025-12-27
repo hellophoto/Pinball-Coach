@@ -77,14 +77,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Dashboard</h2>
+        <h2 className="text-2xl font-bold" style={{ 
+          color: 'var(--neon-cyan)',
+          textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
+        }}>Dashboard</h2>
         <button
           onClick={handleIFPASync}
           disabled={isSyncing}
           className={`px-4 py-2 rounded-lg font-semibold transition ${
             isSyncing
-              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-              : 'bg-purple-600 hover:bg-purple-700 text-white'
+              ? 'opacity-50 cursor-not-allowed bg-gray-700 border-2 border-gray-600 text-gray-400'
+              : 'button-primary'
           }`}
         >
           {isSyncing ? '🔄 Syncing...' : '🌐 Sync IFPA'}
@@ -93,59 +96,92 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
 
       {/* Sync Message */}
       {syncMessage && (
-        <div className={`rounded-lg p-4 ${
+        <div className={`rounded-lg p-4 border-2 ${
           syncMessage.includes('Error') || syncMessage.includes('errors')
-            ? 'bg-red-900/30 border border-red-600 text-red-200'
-            : 'bg-green-900/30 border border-green-600 text-green-200'
-        }`}>
-          <p className="text-sm">{syncMessage}</p>
+            ? 'bg-red-900/30 border-red-600'
+            : 'bg-green-900/30 border-green-600'
+        }`} style={{
+          boxShadow: syncMessage.includes('Error') 
+            ? '0 0 10px rgba(255, 0, 0, 0.5)' 
+            : '0 0 10px rgba(0, 255, 0, 0.5)'
+        }}>
+          <p className="text-sm" style={{ 
+            color: syncMessage.includes('Error') ? '#ff6b6b' : '#51cf66'
+          }}>{syncMessage}</p>
         </div>
       )}
 
       {/* Overall Stats */}
-      <div className="bg-gray-800 rounded-lg p-6">
-        <h3 className="text-xl font-semibold text-white mb-4">Overall Stats</h3>
+      <div className="card-synthwave rounded-lg p-6">
+        <h3 className="text-xl font-semibold mb-4" style={{ 
+          color: 'var(--neon-magenta)',
+          textShadow: '0 0 10px var(--neon-magenta)'
+        }}>Overall Stats</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-700 rounded p-4">
-            <div className="text-gray-400 text-sm">Total Games</div>
-            <div className="text-2xl font-bold text-white">{games.length}</div>
+          <div className="stat-card rounded p-4">
+            <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>Total Games</div>
+            <div className="text-2xl font-bold score-animate" style={{ 
+              color: 'var(--neon-cyan)',
+              textShadow: '0 0 10px var(--neon-cyan)'
+            }}>{games.length}</div>
           </div>
-          <div className="bg-gray-700 rounded p-4">
-            <div className="text-gray-400 text-sm">Win Rate</div>
-            <div className="text-2xl font-bold text-green-400">{winRate}%</div>
+          <div className="stat-card rounded p-4">
+            <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>Win Rate</div>
+            <div className="text-2xl font-bold score-animate" style={{ 
+              color: 'var(--neon-yellow)',
+              textShadow: '0 0 10px var(--neon-yellow)'
+            }}>{winRate}%</div>
           </div>
-          <div className="bg-gray-700 rounded p-4">
-            <div className="text-gray-400 text-sm">Wins</div>
-            <div className="text-2xl font-bold text-green-400">{wins}</div>
+          <div className="stat-card rounded p-4">
+            <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>Wins</div>
+            <div className="text-2xl font-bold score-animate" style={{ 
+              color: '#00ff88',
+              textShadow: '0 0 10px #00ff88'
+            }}>{wins}</div>
           </div>
-          <div className="bg-gray-700 rounded p-4">
-            <div className="text-gray-400 text-sm">Losses</div>
-            <div className="text-2xl font-bold text-red-400">{losses}</div>
+          <div className="stat-card rounded p-4">
+            <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>Losses</div>
+            <div className="text-2xl font-bold score-animate" style={{ 
+              color: '#ff0066',
+              textShadow: '0 0 10px #ff0066'
+            }}>{losses}</div>
           </div>
         </div>
       </div>
 
       {/* High Scores */}
       {highScores.length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Top High Scores</h3>
+        <div className="card-synthwave rounded-lg p-6">
+          <h3 className="text-xl font-semibold mb-4" style={{ 
+            color: 'var(--neon-magenta)',
+            textShadow: '0 0 10px var(--neon-magenta)'
+          }}>Top High Scores</h3>
           <div className="space-y-2">
             {highScores.map((game, index) => (
-              <div key={game.id} className="flex items-center justify-between bg-gray-700 rounded p-3">
+              <div key={game.id} className="flex items-center justify-between stat-card rounded p-3">
                 <div className="flex items-center gap-3">
-                  <div className="text-gray-400 font-mono w-6">#{index + 1}</div>
+                  <div className="font-mono w-6" style={{ color: 'var(--neon-purple)' }}>#{index + 1}</div>
                   <div>
-                    <div className="text-white font-semibold">{game.table}</div>
-                    <div className="text-gray-400 text-sm">{game.venue}</div>
+                    <div className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>{game.table}</div>
+                    <div className="text-sm" style={{ color: 'var(--neon-purple)', opacity: 0.8 }}>{game.venue}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="text-blue-400 font-bold text-lg">
+                  <div className="font-bold text-lg" style={{ 
+                    color: 'var(--neon-yellow)',
+                    textShadow: '0 0 10px var(--neon-yellow)'
+                  }}>
                     {formatScore(game.myScore)}
                   </div>
                   {game.percentile !== undefined && (
-                    <div className="bg-blue-900/30 border border-blue-600 rounded px-2 py-1">
-                      <span className="text-blue-400 text-xs font-semibold">{game.percentile.toFixed(1)}%</span>
+                    <div className="rounded px-2 py-1 border-2" style={{
+                      background: 'rgba(0, 255, 255, 0.1)',
+                      borderColor: 'var(--neon-cyan)',
+                      boxShadow: '0 0 10px var(--neon-cyan)'
+                    }}>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--neon-cyan)' }}>
+                        {game.percentile.toFixed(1)}%
+                      </span>
                     </div>
                   )}
                 </div>
@@ -157,8 +193,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
 
       {/* Stats by Table */}
       {Object.keys(tableStats).length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Stats by Table</h3>
+        <div className="card-synthwave rounded-lg p-6">
+          <h3 className="text-xl font-semibold mb-4" style={{ 
+            color: 'var(--neon-magenta)',
+            textShadow: '0 0 10px var(--neon-magenta)'
+          }}>Stats by Table</h3>
           <div className="space-y-2">
             {Object.entries(tableStats)
               .sort(([, a], [, b]) => b.total - a.total)
@@ -167,23 +206,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
                   ? ((stats.wins / (stats.wins + stats.losses)) * 100).toFixed(0)
                   : '0';
                 return (
-                  <div key={table} className="bg-gray-700 rounded p-4">
+                  <div key={table} className="stat-card rounded p-4">
                     <div className="flex justify-between items-start mb-2">
-                      <div className="text-white font-semibold">{table}</div>
-                      <div className="text-blue-400 font-bold">
+                      <div className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>{table}</div>
+                      <div className="font-bold" style={{ 
+                        color: 'var(--neon-yellow)',
+                        textShadow: '0 0 10px var(--neon-yellow)'
+                      }}>
                         {formatScore(stats.highScore)}
                       </div>
                     </div>
-                    <div className="flex gap-4 text-sm">
-                      <div className="text-gray-400">
-                        {stats.total} games
-                      </div>
-                      <div className="text-gray-400">
-                        {stats.wins}W - {stats.losses}L
-                      </div>
-                      <div className="text-gray-400">
-                        {tableWinRate}% win rate
-                      </div>
+                    <div className="flex gap-4 text-sm" style={{ color: 'var(--neon-purple)' }}>
+                      <div>{stats.total} games</div>
+                      <div>{stats.wins}W - {stats.losses}L</div>
+                      <div>{tableWinRate}% win rate</div>
                     </div>
                   </div>
                 );
@@ -194,8 +230,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
 
       {/* Stats by Venue */}
       {Object.keys(venueStats).length > 0 && (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">Stats by Venue</h3>
+        <div className="card-synthwave rounded-lg p-6">
+          <h3 className="text-xl font-semibold mb-4" style={{ 
+            color: 'var(--neon-magenta)',
+            textShadow: '0 0 10px var(--neon-magenta)'
+          }}>Stats by Venue</h3>
           <div className="space-y-2">
             {Object.entries(venueStats)
               .sort(([, a], [, b]) => b.total - a.total)
@@ -204,18 +243,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
                   ? ((stats.wins / (stats.wins + stats.losses)) * 100).toFixed(0)
                   : '0';
                 return (
-                  <div key={venue} className="bg-gray-700 rounded p-4">
-                    <div className="text-white font-semibold mb-2">{venue}</div>
-                    <div className="flex gap-4 text-sm">
-                      <div className="text-gray-400">
-                        {stats.total} games
-                      </div>
-                      <div className="text-gray-400">
-                        {stats.wins}W - {stats.losses}L
-                      </div>
-                      <div className="text-gray-400">
-                        {venueWinRate}% win rate
-                      </div>
+                  <div key={venue} className="stat-card rounded p-4">
+                    <div className="font-semibold mb-2" style={{ color: 'var(--neon-cyan)' }}>{venue}</div>
+                    <div className="flex gap-4 text-sm" style={{ color: 'var(--neon-purple)' }}>
+                      <div>{stats.total} games</div>
+                      <div>{stats.wins}W - {stats.losses}L</div>
+                      <div>{venueWinRate}% win rate</div>
                     </div>
                   </div>
                 );
@@ -225,8 +258,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
       )}
 
       {games.length === 0 && (
-        <div className="bg-gray-800 rounded-lg p-6 text-center">
-          <p className="text-gray-400">No games recorded yet. Add your first game to see stats!</p>
+        <div className="card-synthwave rounded-lg p-6 text-center">
+          <p style={{ color: 'var(--neon-purple)' }}>No games recorded yet. Add your first game to see stats!</p>
         </div>
       )}
     </div>

@@ -29,41 +29,75 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted }) => {
 
   const getResultBadge = (game: Game) => {
     if (game.result === 'win') {
-      return <span className="px-2 py-1 bg-green-600 text-white text-xs rounded">WIN</span>;
+      return (
+        <span className="px-2 py-1 text-xs rounded border-2" style={{
+          background: 'rgba(0, 255, 136, 0.2)',
+          borderColor: '#00ff88',
+          color: '#00ff88',
+          boxShadow: '0 0 10px rgba(0, 255, 136, 0.5)'
+        }}>WIN</span>
+      );
     }
     if (game.result === 'loss') {
-      return <span className="px-2 py-1 bg-red-600 text-white text-xs rounded">LOSS</span>;
+      return (
+        <span className="px-2 py-1 text-xs rounded border-2" style={{
+          background: 'rgba(255, 0, 102, 0.2)',
+          borderColor: '#ff0066',
+          color: '#ff0066',
+          boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
+        }}>LOSS</span>
+      );
     }
-    return <span className="px-2 py-1 bg-gray-600 text-white text-xs rounded">PRACTICE</span>;
+    return (
+      <span className="px-2 py-1 text-xs rounded border-2" style={{
+        background: 'rgba(139, 0, 255, 0.2)',
+        borderColor: 'var(--neon-purple)',
+        color: 'var(--neon-purple)',
+        boxShadow: '0 0 10px var(--neon-purple)'
+      }}>PRACTICE</span>
+    );
   };
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-white">Game History</h2>
+      <h2 className="text-2xl font-bold" style={{ 
+        color: 'var(--neon-cyan)',
+        textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
+      }}>Game History</h2>
 
       {games.length === 0 ? (
-        <div className="bg-gray-800 rounded-lg p-6 text-center">
-          <p className="text-gray-400">No games recorded yet. Add your first game!</p>
+        <div className="card-synthwave rounded-lg p-6 text-center">
+          <p style={{ color: 'var(--neon-purple)' }}>No games recorded yet. Add your first game!</p>
         </div>
       ) : (
         <div className="space-y-3">
           {games.map(game => (
-            <div key={game.id} className="bg-gray-800 rounded-lg p-4 shadow-lg">
+            <div key={game.id} className="card-synthwave rounded-lg p-4 shadow-lg">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-white">{game.table}</h3>
+                    <h3 className="text-lg font-semibold" style={{ color: 'var(--neon-cyan)' }}>
+                      {game.table}
+                    </h3>
                     {getResultBadge(game)}
                     {game.source === 'ifpa' && (
-                      <span className="px-2 py-1 bg-purple-600 text-white text-xs rounded">IFPA</span>
+                      <span className="px-2 py-1 text-xs rounded border-2" style={{
+                        background: 'rgba(255, 0, 255, 0.2)',
+                        borderColor: 'var(--neon-magenta)',
+                        color: 'var(--neon-magenta)',
+                        boxShadow: '0 0 10px var(--neon-magenta)'
+                      }}>IFPA</span>
                     )}
                   </div>
-                  <div className="text-gray-400 text-sm">{game.venue}</div>
-                  <div className="text-gray-500 text-xs mt-1">{formatDate(game.timestamp)}</div>
+                  <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>{game.venue}</div>
+                  <div className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
+                    {formatDate(game.timestamp)}
+                  </div>
                 </div>
                 <button
                   onClick={() => setConfirmDelete(game.id)}
-                  className="text-gray-400 hover:text-red-400 p-2"
+                  className="p-2 transition hover-glow"
+                  style={{ color: 'var(--neon-purple)' }}
                   title="Delete game"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,15 +108,18 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted }) => {
 
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div>
-                  <div className="text-gray-400 text-xs mb-1">My Score</div>
-                  <div className="text-blue-400 font-bold text-xl">
+                  <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>My Score</div>
+                  <div className="font-bold text-xl" style={{ 
+                    color: 'var(--neon-yellow)',
+                    textShadow: '0 0 10px var(--neon-yellow)'
+                  }}>
                     {formatScore(game.myScore)}
                   </div>
                 </div>
                 {game.gameType === 'competitive' && (
                   <div>
-                    <div className="text-gray-400 text-xs mb-1">Opponent Score</div>
-                    <div className="text-gray-300 font-bold text-xl">
+                    <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>Opponent Score</div>
+                    <div className="font-bold text-xl" style={{ color: 'var(--neon-cyan)' }}>
                       {formatScore(game.opponentScore)}
                     </div>
                   </div>
@@ -91,37 +128,53 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted }) => {
 
               {/* Percentile */}
               {game.percentile !== undefined && (
-                <div className="bg-blue-900/30 border border-blue-600 rounded p-3 mt-3">
+                <div className="rounded p-3 mt-3 border-2" style={{
+                  background: 'rgba(0, 255, 255, 0.1)',
+                  borderColor: 'var(--neon-cyan)',
+                  boxShadow: '0 0 10px var(--neon-cyan)'
+                }}>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-300 text-sm">Percentile Ranking:</span>
-                    <span className="text-blue-400 font-bold text-lg">{game.percentile.toFixed(1)}%</span>
+                    <span className="text-sm" style={{ color: 'var(--neon-cyan)' }}>Percentile Ranking:</span>
+                    <span className="font-bold text-lg" style={{ 
+                      color: 'var(--neon-yellow)',
+                      textShadow: '0 0 10px var(--neon-yellow)'
+                    }}>{game.percentile.toFixed(1)}%</span>
                   </div>
                 </div>
               )}
 
               {game.notes && (
-                <div className="bg-gray-700 rounded p-3 mt-3">
-                  <div className="text-gray-400 text-xs mb-1">Notes</div>
-                  <div className="text-gray-300 text-sm">{game.notes}</div>
+                <div className="stat-card rounded p-3 mt-3">
+                  <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>Notes</div>
+                  <div className="text-sm" style={{ color: 'var(--neon-cyan)' }}>{game.notes}</div>
                 </div>
               )}
 
               {/* Delete Confirmation */}
               {confirmDelete === game.id && (
-                <div className="mt-3 bg-red-900/30 border border-red-600 rounded p-3">
-                  <p className="text-white text-sm mb-3">
+                <div className="mt-3 rounded p-3 border-2" style={{
+                  background: 'rgba(255, 0, 102, 0.2)',
+                  borderColor: '#ff0066',
+                  boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
+                }}>
+                  <p className="text-sm mb-3" style={{ color: '#ff0066' }}>
                     Are you sure you want to delete this game?
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDelete(game.id)}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
+                      className="flex-1 py-2 rounded font-semibold border-2 transition"
+                      style={{
+                        background: 'rgba(255, 0, 102, 0.3)',
+                        borderColor: '#ff0066',
+                        color: '#ff0066'
+                      }}
                     >
                       Delete
                     </button>
                     <button
                       onClick={() => setConfirmDelete(null)}
-                      className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
+                      className="flex-1 button-secondary py-2 rounded font-semibold"
                     >
                       Cancel
                     </button>
