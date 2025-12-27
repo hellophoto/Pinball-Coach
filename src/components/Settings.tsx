@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import type { TableStrategy } from '../types';
-import { getTableStrategies, saveTableStrategy, deleteTableStrategy } from '../utils';
+import React, { useState, useEffect } from 'react';
+import type { TableStrategy, Settings as SettingsType } from '../types';
+import { getTableStrategies, saveTableStrategy, deleteTableStrategy, getSettings, saveSettings } from '../utils';
+import { clearPinballMapCache, getPinballMapCacheTimestamp, getPinballMapLocations } from '../services/pinballMapService';
 
 export const Settings: React.FC = () => {
   const [strategies, setStrategies] = useState<Record<string, TableStrategy>>(getTableStrategies());
@@ -14,6 +15,17 @@ export const Settings: React.FC = () => {
   });
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  // Location settings
+  const [settings, setSettingsState] = useState<SettingsType>(getSettings());
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
+  const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(getPinballMapCacheTimestamp());
+
+  // Update cache timestamp when component mounts
+  useEffect(() => {
+    setCacheTimestamp(getPinballMapCacheTimestamp());
+  }, []);
 
   const handleNewStrategy = () => {
     setIsEditing('new');
@@ -71,22 +83,186 @@ export const Settings: React.FC = () => {
     });
   };
 
+  const handleUpdateLocation = async () => {
+    setIsUpdatingLocation(true);
+    setLocationMessage(null);
+    
+    try {
+      // Save settings
+      const updatedSettings: SettingsType = {
+        ...settings,
+        pinballMapLastUpdated: Date.now(),
+      };
+      saveSettings(updatedSettings);
+      setSettingsState(updatedSettings);
+      
+      // Force refresh Pinball Map data
+      await getPinballMapLocations(
+        settings.location.city,
+        settings.location.state,
+        settings.location.radius,
+        true // force refresh
+      );
+      
+      setCacheTimestamp(Date.now());
+      setLocationMessage('Location updated and Pinball Map data refreshed successfully!');
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setLocationMessage(`Error updating location: ${errorMsg}`);
+    } finally {
+      setIsUpdatingLocation(false);
+    }
+  };
+
+  const handleClearCache = () => {
+    clearPinballMapCache();
+    setCacheTimestamp(null);
+    setLocationMessage('Pinball Map cache cleared successfully!');
+  };
+
+  const formatLastUpdated = (timestamp: number | null) => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-white">Table Strategies</h2>
-        {!isEditing && (
-          <button
-            onClick={handleNewStrategy}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
-          >
-            + Add Strategy
-          </button>
+      {/* Location Settings Section */}
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-4">Pinball Map Settings</h2>
+        
+        {locationMessage && (
+          <div className={`mb-4 rounded-lg p-4 ${
+            locationMessage.includes('Error')
+              ? 'bg-red-900/30 border border-red-600 text-red-200'
+              : 'bg-green-900/30 border border-green-600 text-green-200'
+          }`}>
+            <p className="text-sm">{locationMessage}</p>
+          </div>
         )}
+        
+        <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-white mb-4">Location Configuration</h3>
+          
+          <div className="space-y-4">
+            {/* City */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-300 mb-2 text-sm">City</label>
+                <input
+                  type="text"
+                  value={settings.location.city || ''}
+                  onChange={(e) => setSettingsState({
+                    ...settings,
+                    location: { ...settings.location, city: e.target.value }
+                  })}
+                  placeholder="Portland"
+                  className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              {/* State */}
+              <div>
+                <label className="block text-gray-300 mb-2 text-sm">State</label>
+                <input
+                  type="text"
+                  value={settings.location.state || ''}
+                  onChange={(e) => setSettingsState({
+                    ...settings,
+                    location: { ...settings.location, state: e.target.value }
+                  })}
+                  placeholder="OR"
+                  className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+            
+            {/* ZIP Code */}
+            <div>
+              <label className="block text-gray-300 mb-2 text-sm">ZIP Code (Optional)</label>
+              <input
+                type="text"
+                value={settings.location.zipCode || ''}
+                onChange={(e) => setSettingsState({
+                  ...settings,
+                  location: { ...settings.location, zipCode: e.target.value }
+                })}
+                placeholder="97205"
+                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            {/* Radius */}
+            <div>
+              <label className="block text-gray-300 mb-2 text-sm">Search Radius (miles)</label>
+              <select
+                value={settings.location.radius}
+                onChange={(e) => setSettingsState({
+                  ...settings,
+                  location: { ...settings.location, radius: parseInt(e.target.value) }
+                })}
+                className="w-full bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="5">5 miles</option>
+                <option value="10">10 miles</option>
+                <option value="25">25 miles</option>
+                <option value="50">50 miles</option>
+              </select>
+            </div>
+            
+            {/* Update Button */}
+            <button
+              onClick={handleUpdateLocation}
+              disabled={isUpdatingLocation}
+              className={`w-full font-semibold py-3 rounded-lg transition ${
+                isUpdatingLocation
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+              }`}
+            >
+              {isUpdatingLocation ? '🔄 Updating...' : '📍 Update Location'}
+            </button>
+            
+            {/* Cache Info */}
+            <div className="bg-gray-700 rounded p-3 mt-4">
+              <div className="flex justify-between items-center text-sm mb-2">
+                <span className="text-gray-400">Last Updated:</span>
+                <span className="text-gray-300">{formatLastUpdated(cacheTimestamp)}</span>
+              </div>
+              <button
+                onClick={handleClearCache}
+                className="w-full bg-gray-600 hover:bg-gray-500 text-white py-2 rounded font-semibold text-sm transition"
+              >
+                🗑️ Clear Cache
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Edit/Add Form */}
-      {isEditing && (
+      {/* Table Strategies Section */}
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold text-white">Table Strategies</h2>
+          {!isEditing && (
+            <button
+              onClick={handleNewStrategy}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+            >
+              + Add Strategy
+            </button>
+          )}
+        </div>
+
+        {/* Edit/Add Form */}
+        {isEditing && (
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
           <h3 className="text-xl font-semibold text-white mb-4">
             {isEditing === 'new' ? 'Add New Strategy' : 'Edit Strategy'}
@@ -241,7 +417,7 @@ export const Settings: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleDeleteStrategy(tableName)}
-                          className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
+                           className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
                         >
                           Delete
                         </button>
@@ -259,6 +435,7 @@ export const Settings: React.FC = () => {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 };

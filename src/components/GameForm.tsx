@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import type { GameType } from '../types';
-import { addGame, getGames } from '../utils';
+import React, { useState, useEffect } from 'react';
+import type { GameType, PinballMapLocation } from '../types';
+import { addGame, getGames, getSettings, saveGames } from '../utils';
 import { StrategyCard } from './StrategyCard';
+import { getPinballMapLocations } from '../services/pinballMapService';
+import { fetchPercentileWithTimeout } from '../services/pinScoresService';
 
 interface GameFormProps {
   onGameAdded: () => void;
@@ -18,11 +20,56 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [customTable, setCustomTable] = useState('');
   const [showCustomVenue, setShowCustomVenue] = useState(false);
   const [showCustomTable, setShowCustomTable] = useState(false);
+  const [pinballMapLocations, setPinballMapLocations] = useState<PinballMapLocation[]>([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [isFetchingPercentile, setIsFetchingPercentile] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<PinballMapLocation | null>(null);
 
   // Get unique venues and tables from existing games
   const games = getGames();
-  const venues = Array.from(new Set(games.map(g => g.venue))).sort();
-  const tables = Array.from(new Set(games.map(g => g.table))).sort();
+  const existingVenues = Array.from(new Set(games.map(g => g.venue))).sort();
+  const existingTables = Array.from(new Set(games.map(g => g.table))).sort();
+
+  // Load Pinball Map locations on mount
+  useEffect(() => {
+    const loadPinballMapData = async () => {
+      setIsLoadingLocations(true);
+      try {
+        const settings = getSettings();
+        const locations = await getPinballMapLocations(
+          settings.location.city,
+          settings.location.state,
+          settings.location.radius
+        );
+        setPinballMapLocations(locations);
+      } catch (error) {
+        console.error('Error loading Pinball Map data:', error);
+        // Fail silently - app still works without Pinball Map data
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    };
+
+    loadPinballMapData();
+  }, []);
+
+  // Update selected location when venue changes
+  useEffect(() => {
+    if (!showCustomVenue && venue) {
+      const location = pinballMapLocations.find(loc => loc.name === venue);
+      setSelectedLocation(location || null);
+    } else {
+      setSelectedLocation(null);
+    }
+  }, [venue, showCustomVenue, pinballMapLocations]);
+
+  // Combine venues from Pinball Map and existing games
+  const allVenues = Array.from(
+    new Set([
+      ...pinballMapLocations.map(loc => loc.name),
+      ...existingVenues,
+    ])
+  ).sort();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +92,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       result = myScoreNum > opponentScoreNum ? 'win' : 'loss';
     }
 
-    addGame({
+    // Add game first (without percentile)
+    const newGame = addGame({
       venue: finalVenue,
       table: finalTable,
       myScore: myScoreNum,
@@ -54,6 +102,27 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       result,
       notes,
     });
+
+    // Fetch percentile in background
+    setIsFetchingPercentile(true);
+    fetchPercentileWithTimeout(finalTable, myScoreNum)
+      .then(percentile => {
+        if (percentile !== null) {
+          // Update the game with percentile using the existing utility
+          const allGames = getGames();
+          const gameIndex = allGames.findIndex(g => g.id === newGame.id);
+          if (gameIndex !== -1) {
+            allGames[gameIndex].percentile = percentile;
+            saveGames(allGames);
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching percentile:', error);
+      })
+      .finally(() => {
+        setIsFetchingPercentile(false);
+      });
 
     // Reset form
     setVenue('');
@@ -73,10 +142,20 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   return (
     <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
       <h2 className="text-2xl font-bold text-white mb-6">Add New Game</h2>
+      
+      {isFetchingPercentile && (
+        <div className="mb-4 bg-blue-900/30 border border-blue-600 rounded p-3">
+          <p className="text-blue-200 text-sm">🔄 Fetching percentile ranking from PinScores...</p>
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Venue */}
         <div>
-          <label className="block text-gray-300 mb-2">Venue</label>
+          <label className="block text-gray-300 mb-2">
+            Venue
+            {isLoadingLocations && <span className="ml-2 text-sm text-gray-400">(Loading Pinball Map data...)</span>}
+          </label>
           {!showCustomVenue ? (
             <div className="flex gap-2">
               <select
@@ -85,7 +164,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 className="flex-1 bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select venue...</option>
-                {venues.map(v => (
+                {allVenues.map(v => (
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
@@ -117,6 +196,34 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
           )}
         </div>
 
+        {/* Available Tables from Pinball Map */}
+        {selectedLocation && selectedLocation.machines.length > 0 && (
+          <div className="bg-gray-700 rounded-lg p-4">
+            <h3 className="text-sm font-semibold text-blue-400 mb-2">
+              📍 Available Tables at {selectedLocation.name}
+            </h3>
+            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
+              {selectedLocation.machines.map(machine => (
+                <button
+                  key={machine.id}
+                  type="button"
+                  onClick={() => {
+                    setTable(machine.name);
+                    setShowCustomTable(false);
+                  }}
+                  className={`text-left px-3 py-2 rounded text-sm transition ${
+                    table === machine.name
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+                  }`}
+                >
+                  {machine.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Table */}
         <div>
           <label className="block text-gray-300 mb-2">Table</label>
@@ -128,7 +235,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 className="flex-1 bg-gray-700 text-white rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select table...</option>
-                {tables.map(t => (
+                {existingTables.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>

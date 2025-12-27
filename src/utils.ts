@@ -1,7 +1,17 @@
-import type { Game, TableStrategy } from './types';
+import type { Game, TableStrategy, Settings } from './types';
 
 const STORAGE_KEY = 'pinball-coach-games';
 const STRATEGIES_KEY = 'pinball-coach-table-strategies';
+const SETTINGS_KEY = 'pinball-coach-settings';
+
+// Default settings
+const DEFAULT_SETTINGS: Settings = {
+  location: {
+    city: 'Portland',
+    state: 'OR',
+    radius: 25,
+  },
+};
 
 export const getGames = (): Game[] => {
   try {
@@ -92,4 +102,26 @@ export const deleteTableStrategy = (tableName: string): void => {
   const strategies = getTableStrategies();
   delete strategies[tableName];
   saveTableStrategies(strategies);
+};
+
+// Settings Management
+export const getSettings = (): Settings => {
+  try {
+    const data = localStorage.getItem(SETTINGS_KEY);
+    if (data) {
+      return JSON.parse(data);
+    }
+    return DEFAULT_SETTINGS;
+  } catch (error) {
+    console.error('Error loading settings:', error);
+    return DEFAULT_SETTINGS;
+  }
+};
+
+export const saveSettings = (settings: Settings): void => {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Error saving settings:', error);
+  }
 };
