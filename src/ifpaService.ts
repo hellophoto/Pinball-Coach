@@ -4,6 +4,7 @@ const IFPA_API_BASE = 'https://api.ifpapinball.com/v1';
 // Default player ID - can be made configurable in future versions
 const DEFAULT_PLAYER_ID = '130319';
 const WIN_POSITION_THRESHOLD = 3; // Top 3 positions considered wins
+const UNKNOWN_SCORE = 0; // IFPA API does not provide individual game scores
 
 export interface IFPAResult {
   tournament_id: number;
@@ -93,8 +94,8 @@ export const syncIFPAGames = async (): Promise<IFPASyncResult> => {
         addGame({
           venue,
           table,
-          myScore: 0, // IFPA doesn't provide scores in results
-          opponentScore: 0,
+          myScore: UNKNOWN_SCORE,
+          opponentScore: UNKNOWN_SCORE,
           gameType,
           result: gameResult,
           notes: `IFPA Tournament: ${ifpaResult.tournament_name}\nPosition: ${ifpaResult.position}/${ifpaResult.total_players}\nDate: ${ifpaResult.event_date}`,
