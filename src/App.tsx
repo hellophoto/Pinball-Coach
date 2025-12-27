@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { GameForm } from './components/GameForm';
 import { Dashboard } from './components/Dashboard';
 import { GameHistory } from './components/GameHistory';
+import { Settings } from './components/Settings';
 
-type View = 'form' | 'dashboard' | 'history';
+type View = 'form' | 'dashboard' | 'history' | 'settings';
 
 function App() {
   const [view, setView] = useState<View>('dashboard');
@@ -15,6 +16,10 @@ function App() {
   };
 
   const handleGameDeleted = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleIFPASync = () => {
     setRefreshKey(prev => prev + 1);
   };
 
@@ -56,6 +61,16 @@ function App() {
             >
               History
             </button>
+            <button
+              onClick={() => setView('settings')}
+              className={`flex-1 py-2 px-4 rounded-lg font-semibold transition ${
+                view === 'settings'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Settings
+            </button>
           </nav>
         </div>
       </header>
@@ -64,7 +79,7 @@ function App() {
       <main className="max-w-4xl mx-auto px-4 py-6">
         {view === 'dashboard' && (
           <div key={refreshKey}>
-            <Dashboard />
+            <Dashboard onSyncComplete={handleIFPASync} />
           </div>
         )}
         {view === 'form' && <GameForm onGameAdded={handleGameAdded} />}
@@ -73,6 +88,7 @@ function App() {
             <GameHistory onGameDeleted={handleGameDeleted} />
           </div>
         )}
+        {view === 'settings' && <Settings />}
       </main>
     </div>
   );

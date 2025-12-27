@@ -54,6 +54,9 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted }) => {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-lg font-semibold text-white">{game.table}</h3>
                     {getResultBadge(game)}
+                    {game.source === 'ifpa' && (
+                      <span className="px-2 py-1 bg-purple-600 text-white text-xs rounded">IFPA</span>
+                    )}
                   </div>
                   <div className="text-gray-400 text-sm">{game.venue}</div>
                   <div className="text-gray-500 text-xs mt-1">{formatDate(game.timestamp)}</div>
