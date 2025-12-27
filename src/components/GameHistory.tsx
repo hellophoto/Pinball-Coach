@@ -89,6 +89,16 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted }) => {
                 )}
               </div>
 
+              {/* Percentile */}
+              {game.percentile !== undefined && (
+                <div className="bg-blue-900/30 border border-blue-600 rounded p-3 mt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300 text-sm">Percentile Ranking:</span>
+                    <span className="text-blue-400 font-bold text-lg">{game.percentile.toFixed(1)}%</span>
+                  </div>
+                </div>
+              )}
+
               {game.notes && (
                 <div className="bg-gray-700 rounded p-3 mt-3">
                   <div className="text-gray-400 text-xs mb-1">Notes</div>

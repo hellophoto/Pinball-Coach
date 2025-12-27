@@ -139,8 +139,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
                     <div className="text-gray-400 text-sm">{game.venue}</div>
                   </div>
                 </div>
-                <div className="text-blue-400 font-bold text-lg">
-                  {formatScore(game.myScore)}
+                <div className="flex items-center gap-3">
+                  <div className="text-blue-400 font-bold text-lg">
+                    {formatScore(game.myScore)}
+                  </div>
+                  {game.percentile !== undefined && (
+                    <div className="bg-blue-900/30 border border-blue-600 rounded px-2 py-1">
+                      <span className="text-blue-400 text-xs font-semibold">{game.percentile.toFixed(1)}%</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
