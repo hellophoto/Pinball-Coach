@@ -1,42 +1,202 @@
+/* Synthwave App Styles */
+
+/* Root container with CRT curve effect */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Main title with neon glow */
+.app-title {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--neon-cyan);
+  text-shadow: 
+    0 0 10px var(--neon-cyan),
+    0 0 20px var(--neon-cyan),
+    0 0 30px var(--neon-cyan),
+    0 0 40px var(--neon-magenta),
+    0 0 70px var(--neon-magenta);
 }
 
-@keyframes logo-spin {
+/* Navigation buttons with neon styling */
+.nav-button {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  position: relative;
+  background: rgba(21, 0, 37, 0.8);
+  border: 2px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-button:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 
+    0 0 15px var(--neon-cyan),
+    0 0 30px var(--neon-cyan),
+    inset 0 0 15px rgba(0, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.nav-button-active {
+  background: rgba(255, 0, 255, 0.2);
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+  box-shadow: 
+    0 0 15px var(--neon-magenta),
+    0 0 30px var(--neon-magenta),
+    inset 0 0 15px rgba(255, 0, 255, 0.3);
+}
+
+/* Card styling with neon borders */
+.card-synthwave {
+  background: linear-gradient(135deg, rgba(21, 0, 37, 0.9) 0%, rgba(26, 0, 51, 0.9) 100%);
+  border: 2px solid var(--neon-purple);
+  box-shadow: 
+    0 0 10px var(--neon-purple),
+    0 0 20px var(--neon-purple),
+    inset 0 0 20px rgba(139, 0, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.card-synthwave:hover {
+  box-shadow: 
+    0 0 15px var(--neon-purple),
+    0 0 30px var(--neon-purple),
+    0 0 45px var(--neon-purple),
+    inset 0 0 20px rgba(139, 0, 255, 0.2);
+  transform: translateY(-3px);
+}
+
+/* Stat card with animated counters */
+.stat-card {
+  background: linear-gradient(135deg, rgba(21, 0, 37, 0.95) 0%, rgba(10, 0, 21, 0.95) 100%);
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 
+    0 0 10px var(--neon-cyan),
+    0 0 20px var(--neon-cyan),
+    inset 0 0 15px rgba(0, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(0, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+.stat-card:hover {
+  border-color: var(--neon-magenta);
+  box-shadow: 
+    0 0 15px var(--neon-magenta),
+    0 0 30px var(--neon-magenta),
+    inset 0 0 20px rgba(255, 0, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Button styling */
+.button-primary {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  background: rgba(255, 0, 255, 0.2);
+  border: 2px solid var(--neon-magenta);
+  color: var(--neon-magenta);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 10px var(--neon-magenta),
+    0 0 20px var(--neon-magenta);
+}
+
+.button-primary:hover {
+  background: rgba(255, 0, 255, 0.3);
+  box-shadow: 
+    0 0 20px var(--neon-magenta),
+    0 0 40px var(--neon-magenta),
+    inset 0 0 20px rgba(255, 0, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.button-secondary {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+}
+
+.button-secondary:hover {
+  background: rgba(0, 255, 255, 0.2);
+  box-shadow: 
+    0 0 15px var(--neon-cyan),
+    0 0 30px var(--neon-cyan);
+}
+
+/* Input fields */
+.input-synthwave {
+  font-family: 'Orbitron', sans-serif;
+  background: rgba(10, 0, 21, 0.8);
+  border: 2px solid var(--neon-purple);
+  color: var(--neon-cyan);
+  transition: all 0.3s ease;
+}
+
+.input-synthwave:focus {
+  outline: none;
+  border-color: var(--neon-magenta);
+  box-shadow: 
+    0 0 10px var(--neon-magenta),
+    0 0 20px var(--neon-magenta),
+    inset 0 0 10px rgba(255, 0, 255, 0.2);
+}
+
+.input-synthwave::placeholder {
+  color: rgba(139, 0, 255, 0.5);
+}
+
+/* Score animations */
+@keyframes countUp {
   from {
-    transform: rotate(0deg);
+    opacity: 0;
+    transform: translateY(20px);
   }
   to {
-    transform: rotate(360deg);
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.score-animate {
+  animation: countUp 0.5s ease-out;
 }
