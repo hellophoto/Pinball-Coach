@@ -31,13 +31,13 @@ function App() {
         borderBottom: '2px solid var(--neon-purple)',
         boxShadow: '0 0 20px var(--neon-purple)'
       }}>
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-3xl font-bold mb-4 app-title">🎯 Pinball Coach</h1>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-4 app-title text-center">🎯 Pinball Coach</h1>
           {/* Navigation */}
-          <nav className="flex gap-2">
+          <nav className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => setView('dashboard')}
-              className={`flex-1 py-2 px-4 rounded-lg font-semibold nav-button ${
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'dashboard' ? 'nav-button-active' : ''
               }`}
             >
@@ -45,7 +45,7 @@ function App() {
             </button>
             <button
               onClick={() => setView('form')}
-              className={`flex-1 py-2 px-4 rounded-lg font-semibold nav-button ${
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'form' ? 'nav-button-active' : ''
               }`}
             >
@@ -53,7 +53,7 @@ function App() {
             </button>
             <button
               onClick={() => setView('history')}
-              className={`flex-1 py-2 px-4 rounded-lg font-semibold nav-button ${
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'history' ? 'nav-button-active' : ''
               }`}
             >
@@ -61,7 +61,7 @@ function App() {
             </button>
             <button
               onClick={() => setView('settings')}
-              className={`flex-1 py-2 px-4 rounded-lg font-semibold nav-button ${
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'settings' ? 'nav-button-active' : ''
               }`}
             >
@@ -72,7 +72,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {view === 'dashboard' && (
           <div key={refreshKey}>
             <Dashboard onSyncComplete={handleIFPASync} />
