@@ -12,6 +12,7 @@
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+  text-align: center;
   color: var(--neon-cyan);
   text-shadow: 
     0 0 10px var(--neon-cyan),
@@ -26,6 +27,8 @@
   font-family: 'Orbitron', sans-serif;
   font-weight: 700;
   position: relative;
+  width: 100%;
+  text-align: center;
   background: rgba(21, 0, 37, 0.8);
   border: 2px solid var(--neon-cyan);
   color: var(--neon-cyan);
@@ -55,6 +58,7 @@
 
 /* Card styling with neon borders */
 .card-synthwave {
+  width: 100%;
   background: linear-gradient(135deg, rgba(21, 0, 37, 0.9) 0%, rgba(26, 0, 51, 0.9) 100%);
   border: 2px solid var(--neon-purple);
   box-shadow: 
@@ -75,6 +79,7 @@
 
 /* Stat card with animated counters */
 .stat-card {
+  width: 100%;
   background: linear-gradient(135deg, rgba(21, 0, 37, 0.95) 0%, rgba(10, 0, 21, 0.95) 100%);
   border: 2px solid var(--neon-cyan);
   box-shadow: 
@@ -199,4 +204,52 @@
 
 .score-animate {
   animation: countUp 0.5s ease-out;
+}
+
+/* Responsive padding and margins - Mobile First */
+/* Mobile base styles (default) */
+.card-synthwave,
+.stat-card {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.button-primary,
+.button-secondary {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+.input-synthwave {
+  width: 100%;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+}
+
+/* Tablet and up (sm: 640px) */
+@media (min-width: 640px) {
+  .card-synthwave,
+  .stat-card {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .button-primary,
+  .button-secondary {
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .input-synthwave {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Desktop and up (lg: 1024px) */
+@media (min-width: 1024px) {
+  .card-synthwave,
+  .stat-card {
+    padding: 1.5rem;
+  }
 }
