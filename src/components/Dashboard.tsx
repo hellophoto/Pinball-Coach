@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { getGames, formatScore } from '../utils';
 import { syncIFPAGames } from '../ifpaService';
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onSyncComplete?: () => void;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   
@@ -57,10 +61,10 @@ export const Dashboard: React.FC = () => {
         setSyncMessage(`No new games to import. ${result.skipped} games already exist.`);
       } else {
         setSyncMessage(`Successfully imported ${result.imported} games from IFPA!${result.skipped > 0 ? ` (${result.skipped} skipped as duplicates)` : ''}`);
-        // Trigger a page refresh to show new data
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        // Notify parent to refresh
+        if (onSyncComplete) {
+          onSyncComplete();
+        }
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';

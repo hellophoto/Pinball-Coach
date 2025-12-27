@@ -1,7 +1,9 @@
 import { addGame, getGames } from './utils';
 
 const IFPA_API_BASE = 'https://api.ifpapinball.com/v1';
-const PLAYER_ID = '130319';
+// Default player ID - can be made configurable in future versions
+const DEFAULT_PLAYER_ID = '130319';
+const WIN_POSITION_THRESHOLD = 3; // Top 3 positions considered wins
 
 export interface IFPAResult {
   tournament_id: number;
@@ -23,7 +25,7 @@ export interface IFPASyncResult {
 
 export const fetchIFPAResults = async (): Promise<IFPAResult[]> => {
   try {
-    const response = await fetch(`${IFPA_API_BASE}/player/${PLAYER_ID}/results`);
+    const response = await fetch(`${IFPA_API_BASE}/player/${DEFAULT_PLAYER_ID}/results`);
     
     if (!response.ok) {
       throw new Error(`IFPA API error: ${response.status} ${response.statusText}`);
@@ -82,8 +84,8 @@ export const syncIFPAGames = async (): Promise<IFPASyncResult> => {
         }
 
         // Determine result based on position
-        // Top 3 positions are considered wins for motivation
-        const isWin = ifpaResult.position <= 3;
+        // Top positions are considered wins for motivation
+        const isWin = ifpaResult.position <= WIN_POSITION_THRESHOLD;
         const gameType = 'competitive';
         const gameResult = isWin ? 'win' : 'loss';
         

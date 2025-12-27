@@ -19,6 +19,10 @@ function App() {
     setRefreshKey(prev => prev + 1);
   };
 
+  const handleIFPASync = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Header */}
@@ -75,7 +79,7 @@ function App() {
       <main className="max-w-4xl mx-auto px-4 py-6">
         {view === 'dashboard' && (
           <div key={refreshKey}>
-            <Dashboard />
+            <Dashboard onSyncComplete={handleIFPASync} />
           </div>
         )}
         {view === 'form' && <GameForm onGameAdded={handleGameAdded} />}

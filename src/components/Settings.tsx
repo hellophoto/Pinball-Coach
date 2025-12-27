@@ -13,6 +13,7 @@ export const Settings: React.FC = () => {
     tips: '',
   });
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleNewStrategy = () => {
     setIsEditing('new');
@@ -35,13 +36,14 @@ export const Settings: React.FC = () => {
 
   const handleSaveStrategy = () => {
     if (!editForm.table.trim()) {
-      alert('Table name is required');
+      setErrorMessage('Table name is required');
       return;
     }
 
     saveTableStrategy(editForm);
     setStrategies(getTableStrategies());
     setIsEditing(null);
+    setErrorMessage(null);
     setEditForm({
       table: '',
       skillShot: '',
@@ -59,6 +61,7 @@ export const Settings: React.FC = () => {
 
   const handleCancel = () => {
     setIsEditing(null);
+    setErrorMessage(null);
     setEditForm({
       table: '',
       skillShot: '',
@@ -88,6 +91,14 @@ export const Settings: React.FC = () => {
           <h3 className="text-xl font-semibold text-white mb-4">
             {isEditing === 'new' ? 'Add New Strategy' : 'Edit Strategy'}
           </h3>
+          
+          {/* Error Message */}
+          {errorMessage && (
+            <div className="mb-4 bg-red-900/30 border border-red-600 rounded p-3">
+              <p className="text-red-200 text-sm">{errorMessage}</p>
+            </div>
+          )}
+          
           <div className="space-y-4">
             <div>
               <label className="block text-gray-300 mb-2">Table Name</label>
