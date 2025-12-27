@@ -1,6 +1,7 @@
-import type { Game } from './types';
+import type { Game, TableStrategy } from './types';
 
 const STORAGE_KEY = 'pinball-coach-games';
+const STRATEGIES_KEY = 'pinball-coach-table-strategies';
 
 export const getGames = (): Game[] => {
   try {
@@ -55,4 +56,40 @@ export const formatScore = (score: number): string => {
     return `${(score / 1_000).toFixed(1)}K`;
   }
   return score.toString();
+};
+
+// Table Strategies
+export const getTableStrategies = (): Record<string, TableStrategy> => {
+  try {
+    const data = localStorage.getItem(STRATEGIES_KEY);
+    return data ? JSON.parse(data) : {};
+  } catch (error) {
+    console.error('Error loading table strategies:', error);
+    return {};
+  }
+};
+
+export const saveTableStrategies = (strategies: Record<string, TableStrategy>): void => {
+  try {
+    localStorage.setItem(STRATEGIES_KEY, JSON.stringify(strategies));
+  } catch (error) {
+    console.error('Error saving table strategies:', error);
+  }
+};
+
+export const getTableStrategy = (tableName: string): TableStrategy | undefined => {
+  const strategies = getTableStrategies();
+  return strategies[tableName];
+};
+
+export const saveTableStrategy = (strategy: TableStrategy): void => {
+  const strategies = getTableStrategies();
+  strategies[strategy.table] = strategy;
+  saveTableStrategies(strategies);
+};
+
+export const deleteTableStrategy = (tableName: string): void => {
+  const strategies = getTableStrategies();
+  delete strategies[tableName];
+  saveTableStrategies(strategies);
 };

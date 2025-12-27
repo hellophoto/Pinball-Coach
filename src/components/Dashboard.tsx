@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getGames, formatScore } from '../utils';
+import { syncIFPAGames } from '../ifpaService';
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onSyncComplete?: () => void;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  
   const games = getGames();
   const competitiveGames = games.filter(g => g.gameType === 'competitive');
   const wins = competitiveGames.filter(g => g.result === 'win').length;
@@ -40,9 +48,59 @@ export const Dashboard: React.FC = () => {
     .sort((a, b) => b.myScore - a.myScore)
     .slice(0, 5);
 
+  const handleIFPASync = async () => {
+    setIsSyncing(true);
+    setSyncMessage(null);
+    
+    try {
+      const result = await syncIFPAGames();
+      
+      if (result.errors.length > 0) {
+        setSyncMessage(`Sync completed with errors. Imported: ${result.imported}, Skipped: ${result.skipped}. Errors: ${result.errors.join(', ')}`);
+      } else if (result.imported === 0) {
+        setSyncMessage(`No new games to import. ${result.skipped} games already exist.`);
+      } else {
+        setSyncMessage(`Successfully imported ${result.imported} games from IFPA!${result.skipped > 0 ? ` (${result.skipped} skipped as duplicates)` : ''}`);
+        // Notify parent to refresh
+        if (onSyncComplete) {
+          onSyncComplete();
+        }
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setSyncMessage(`Error syncing IFPA data: ${errorMsg}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-white">Dashboard</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-white">Dashboard</h2>
+        <button
+          onClick={handleIFPASync}
+          disabled={isSyncing}
+          className={`px-4 py-2 rounded-lg font-semibold transition ${
+            isSyncing
+              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              : 'bg-purple-600 hover:bg-purple-700 text-white'
+          }`}
+        >
+          {isSyncing ? '🔄 Syncing...' : '🌐 Sync IFPA'}
+        </button>
+      </div>
+
+      {/* Sync Message */}
+      {syncMessage && (
+        <div className={`rounded-lg p-4 ${
+          syncMessage.includes('Error') || syncMessage.includes('errors')
+            ? 'bg-red-900/30 border border-red-600 text-red-200'
+            : 'bg-green-900/30 border border-green-600 text-green-200'
+        }`}>
+          <p className="text-sm">{syncMessage}</p>
+        </div>
+      )}
 
       {/* Overall Stats */}
       <div className="bg-gray-800 rounded-lg p-6">
