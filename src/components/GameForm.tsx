@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { GameType } from '../types';
 import { addGame, getGames } from '../utils';
+import { StrategyCard } from './StrategyCard';
 
 interface GameFormProps {
   onGameAdded: () => void;
@@ -158,6 +159,11 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
             </div>
           )}
         </div>
+
+        {/* Strategy Card */}
+        {(table || customTable) && (
+          <StrategyCard tableName={showCustomTable ? customTable : table} />
+        )}
 
         {/* Game Type */}
         <div>

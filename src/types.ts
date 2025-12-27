@@ -11,4 +11,13 @@ export interface Game {
   result: GameResult;
   notes: string;
   timestamp: number;
+  source?: 'manual' | 'ifpa';
+}
+
+export interface TableStrategy {
+  table: string;
+  skillShot: string;
+  modes: string;
+  multiballs: string;
+  tips: string;
 }
