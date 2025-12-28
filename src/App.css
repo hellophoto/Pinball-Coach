@@ -74,7 +74,7 @@
     0 0 15px var(--neon-purple),
     0 0 30px var(--neon-purple),
     0 0 45px var(--neon-purple),
-    inset 0 0 20px rgba(139, 0, 255, 0.2);
+    inset 0 0 20px var(--neon-purple-glow);
   transform: translateY(-3px) scale(1.01);
 }
 
@@ -123,7 +123,7 @@
   box-shadow: 
     0 0 15px var(--neon-magenta),
     0 0 30px var(--neon-magenta),
-    inset 0 0 20px rgba(255, 0, 255, 0.2);
+    inset 0 0 20px var(--neon-magenta-glow);
   transform: scale(1.03);
 }
 
