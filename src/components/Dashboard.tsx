@@ -75,7 +75,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold" style={{ 
           color: 'var(--neon-cyan)',
@@ -117,7 +117,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
           color: 'var(--neon-magenta)',
           textShadow: '0 0 10px var(--neon-magenta)'
         }}>Overall Stats</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="stat-card rounded p-4">
             <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>Total Games</div>
             <div className="text-2xl font-bold score-animate" style={{ 
@@ -198,7 +198,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
             color: 'var(--neon-magenta)',
             textShadow: '0 0 10px var(--neon-magenta)'
           }}>Stats by Table</h3>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(tableStats)
               .sort(([, a], [, b]) => b.total - a.total)
               .map(([table, stats]) => {
@@ -235,7 +235,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
             color: 'var(--neon-magenta)',
             textShadow: '0 0 10px var(--neon-magenta)'
           }}>Stats by Venue</h3>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {Object.entries(venueStats)
               .sort(([, a], [, b]) => b.total - a.total)
               .map(([venue, stats]) => {

@@ -140,7 +140,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   };
 
   return (
-    <div className="card-synthwave rounded-lg p-6 shadow-lg">
+    <div className="max-w-[600px] mx-auto">
+      <div className="card-synthwave rounded-lg p-6 shadow-lg">
       <h2 className="text-2xl font-bold mb-6" style={{ 
         color: 'var(--neon-cyan)',
         textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
@@ -367,6 +368,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
           Save Game
         </button>
       </form>
+    </div>
     </div>
   );
 };
