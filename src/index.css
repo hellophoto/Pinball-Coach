@@ -6,7 +6,10 @@
   --neon-cyan: #00FFFF;
   --neon-yellow: #FFFF00;
   --neon-pink: #FF0080;
-  --neon-purple: #8B00FF;
+  --neon-purple: #BE00FF;
+  --neon-purple-dim: rgba(190, 0, 255, 0.5);
+  --neon-purple-glow: rgba(190, 0, 255, 0.2);
+  --neon-magenta-glow: rgba(255, 0, 255, 0.2);
   --dark-bg: #0a0015;
   --dark-card: #150025;
   --dark-overlay: rgba(10, 0, 21, 0.9);
