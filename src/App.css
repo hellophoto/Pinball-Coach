@@ -190,7 +190,7 @@
 }
 
 .input-synthwave::placeholder {
-  color: rgba(139, 0, 255, 0.5);
+  color: var(--neon-purple-dim);
 }
 
 /* Score animations */
