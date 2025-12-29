@@ -122,6 +122,23 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     }
   }, [venue, showCustomVenue, pinballMapLocations]);
 
+  // Cleanup animation timeout on unmount
+  useEffect(() => {
+    let animationTimeout: number | null = null;
+    
+    if (animatingMachineId !== null) {
+      animationTimeout = setTimeout(() => {
+        setAnimatingMachineId(null);
+      }, MACHINE_SELECT_ANIMATION_DURATION);
+    }
+    
+    return () => {
+      if (animationTimeout) {
+        clearTimeout(animationTimeout);
+      }
+    };
+  }, [animatingMachineId]);
+
   // Helper function to validate and normalize percentile value
   const validatePercentile = (value: string): number | undefined => {
     if (!value) return undefined;
@@ -401,9 +418,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                     setShowCustomTable(false);
                     // Hide the available machines list
                     setShowAvailableMachines(false);
-                    // Trigger selection animation
+                    // Trigger selection animation (cleanup handled by useEffect)
                     setAnimatingMachineId(machine.id);
-                    setTimeout(() => setAnimatingMachineId(null), MACHINE_SELECT_ANIMATION_DURATION);
                   }}
                   className={`text-left px-3 py-2 rounded text-sm transition border-2 machine-button-hover ${
                     table === machine.name
