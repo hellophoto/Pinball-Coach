@@ -47,7 +47,7 @@ function App() {
       }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-center mb-4">
-            <img src="/pinball-coach-logo.jpg" alt="Pinball Coach" className="h-[100px]" />
+            <img src="/pinball-coach-logo.jpg" alt="Pinball Coach" className="h-[50px]" />
           </div>
           {/* Navigation */}
           <nav className="flex flex-col sm:flex-row gap-2">
