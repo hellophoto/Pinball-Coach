@@ -4,6 +4,7 @@ import { addGame, getGames, getSettings, saveGames } from '../utils';
 import { StrategyCard } from './StrategyCard';
 import { getPinballMapLocations } from '../services/pinballMapService';
 import { fetchPercentileWithTimeout } from '../services/pinScoresService';
+import { TipModal } from './TipModal';
 
 interface GameFormProps {
   onGameAdded: () => void;
@@ -24,6 +25,9 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [isFetchingPercentile, setIsFetchingPercentile] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<PinballMapLocation | null>(null);
+  const [showTipModal, setShowTipModal] = useState(false);
+  const [tipModalTable, setTipModalTable] = useState('');
+  const [showAllTips, setShowAllTips] = useState(false);
 
   // Get unique venues and tables from existing games
   const games = getGames();
@@ -136,7 +140,10 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     setShowCustomVenue(false);
     setShowCustomTable(false);
     
-    onGameAdded();
+    // Show tip modal with the table that was just played
+    setTipModalTable(finalTable);
+    setShowAllTips(false);
+    setShowTipModal(true);
   };
 
   return (
@@ -290,6 +297,41 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
           )}
         </div>
 
+        {/* View Tips Button */}
+        {(table || customTable) && (
+          <div>
+            <button
+              type="button"
+              onClick={() => {
+                setTipModalTable(showCustomTable ? customTable : table);
+                setShowAllTips(true);
+                setShowTipModal(true);
+              }}
+              className="w-full py-3 px-4 rounded-lg font-semibold transition-all duration-300"
+              style={{
+                background: 'rgba(0, 255, 255, 0.1)',
+                border: '2px solid var(--neon-cyan)',
+                color: 'var(--neon-cyan)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                boxShadow: '0 0 10px rgba(0, 255, 255, 0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 255, 255, 0.2)';
+                e.currentTarget.style.boxShadow = '0 0 20px var(--neon-cyan)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(0, 255, 255, 0.1)';
+                e.currentTarget.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.3)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              💡 View Tips for {showCustomTable ? customTable : table}
+            </button>
+          </div>
+        )}
+
         {/* Strategy Card */}
         {(table || customTable) && (
           <StrategyCard tableName={showCustomTable ? customTable : table} />
@@ -369,6 +411,21 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
         </button>
       </form>
     </div>
+
+    {/* Tip Modal */}
+    {showTipModal && (
+      <TipModal
+        tableName={tipModalTable}
+        onClose={() => {
+          setShowTipModal(false);
+          // If this is post-game modal (not showAllTips), navigate to dashboard
+          if (!showAllTips) {
+            onGameAdded();
+          }
+        }}
+        showAllTips={showAllTips}
+      />
+    )}
     </div>
   );
 };

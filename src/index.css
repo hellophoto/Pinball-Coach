@@ -144,3 +144,68 @@ body::after {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
+
+/* Tip Modal Animations */
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes borderGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes tipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Tip Modal Styles */
+.tip-modal-content {
+  position: relative;
+  overflow: hidden;
+}
+
+.tip-modal-content::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(0, 255, 255, 0.05) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg);
+  animation: shine 4s infinite;
+  pointer-events: none;
+}
+
+.tip-card {
+  transition: all 0.3s ease;
+}
+
+.tip-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.5) !important;
+}
