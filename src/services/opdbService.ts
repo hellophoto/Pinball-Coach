@@ -207,7 +207,7 @@ export const formatMachineDetails = (machine: OPDBMachine): string => {
     parts.push(`Designer: ${machine.designer.join(', ')}`);
   }
   
-  if (machine.production_count) {
+  if (machine.production_count != null) {
     parts.push(`${machine.production_count.toLocaleString()} units`);
   }
   

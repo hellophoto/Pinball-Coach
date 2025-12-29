@@ -32,8 +32,10 @@ export const checkAndUpdateOPDB = async (): Promise<void> => {
  * @returns A cleanup function to clear the interval
  */
 export const initializeOPDBSync = (): (() => void) => {
-  // Initial check on startup
-  checkAndUpdateOPDB();
+  // Initial check on startup (no await - let it run in background)
+  checkAndUpdateOPDB().catch(err => {
+    console.error('OPDB: Initial sync failed:', err);
+  });
   
   // Set up daily interval
   const intervalId = setInterval(() => {
