@@ -1,6 +1,7 @@
 // PinScores API service
-// Note: The exact PinScores API endpoint may need to be updated based on actual API documentation
-// This implementation uses a placeholder structure that can be easily updated
+// Note: PinScores.net does not have a public API. 
+// This service attempts to fetch data but will likely fail.
+// Users should manually enter percentile values from the PinScores website.
 
 const PINSCORES_API_BASE = 'https://pinscores.net/api';
 
@@ -13,6 +14,8 @@ interface PinScoresResponse {
 
 /**
  * Fetch percentile ranking from PinScores API
+ * Note: This is unlikely to work as PinScores doesn't have a public API.
+ * Users should use the manual entry option in the UI instead.
  * @param tableName - The name of the pinball table/machine
  * @param score - The score to look up
  * @returns Percentile (0-100) or null if unavailable

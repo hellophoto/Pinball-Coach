@@ -28,6 +28,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [showTipModal, setShowTipModal] = useState(false);
   const [tipModalTable, setTipModalTable] = useState('');
   const [showAllTips, setShowAllTips] = useState(false);
+  const [manualPercentile, setManualPercentile] = useState('');
+  const [showPinscoresLink, setShowPinscoresLink] = useState(false);
 
   // Get unique venues and tables from existing games
   const games = getGames();
@@ -96,7 +98,13 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       result = myScoreNum > opponentScoreNum ? 'win' : 'loss';
     }
 
-    // Add game first (without percentile)
+    // Use manual percentile if provided
+    const manualPercentileNum = manualPercentile ? parseFloat(manualPercentile) : undefined;
+    const initialPercentile = manualPercentileNum !== undefined && !isNaN(manualPercentileNum) 
+      ? Math.max(0, Math.min(100, manualPercentileNum))
+      : undefined;
+
+    // Add game with manual percentile if provided
     const newGame = addGame({
       venue: finalVenue,
       table: finalTable,
@@ -105,28 +113,31 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       gameType,
       result,
       notes,
+      percentile: initialPercentile,
     });
 
-    // Fetch percentile in background
-    setIsFetchingPercentile(true);
-    fetchPercentileWithTimeout(finalTable, myScoreNum)
-      .then(percentile => {
-        if (percentile !== null) {
-          // Update the game with percentile using the existing utility
-          const allGames = getGames();
-          const gameIndex = allGames.findIndex(g => g.id === newGame.id);
-          if (gameIndex !== -1) {
-            allGames[gameIndex].percentile = percentile;
-            saveGames(allGames);
+    // Only fetch percentile automatically if not manually provided
+    if (initialPercentile === undefined) {
+      setIsFetchingPercentile(true);
+      fetchPercentileWithTimeout(finalTable, myScoreNum)
+        .then(percentile => {
+          if (percentile !== null) {
+            // Update the game with percentile using the existing utility
+            const allGames = getGames();
+            const gameIndex = allGames.findIndex(g => g.id === newGame.id);
+            if (gameIndex !== -1) {
+              allGames[gameIndex].percentile = percentile;
+              saveGames(allGames);
+            }
           }
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching percentile:', error);
-      })
-      .finally(() => {
-        setIsFetchingPercentile(false);
-      });
+        })
+        .catch(error => {
+          console.error('Error fetching percentile:', error);
+        })
+        .finally(() => {
+          setIsFetchingPercentile(false);
+        });
+    }
 
     // Reset form
     setVenue('');
@@ -139,6 +150,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     setCustomTable('');
     setShowCustomVenue(false);
     setShowCustomTable(false);
+    setManualPercentile('');
+    setShowPinscoresLink(false);
     
     // Show tip modal with the table that was just played
     setTipModalTable(finalTable);
@@ -401,6 +414,77 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
             className="w-full input-synthwave rounded px-4 py-2"
           />
         </div>
+
+        {/* PinScores Percentile Section */}
+        {(table || customTable) && myScore && (
+          <div className="rounded-lg p-4 border-2" style={{
+            background: 'rgba(0, 255, 255, 0.05)',
+            borderColor: 'var(--neon-cyan)',
+            boxShadow: '0 0 10px rgba(0, 255, 255, 0.3)'
+          }}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold" style={{ color: 'var(--neon-cyan)' }}>
+                📊 PinScores Percentile
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowPinscoresLink(!showPinscoresLink)}
+                className="text-xs px-3 py-1 rounded border-2 transition"
+                style={{
+                  background: 'rgba(0, 255, 255, 0.1)',
+                  borderColor: 'var(--neon-cyan)',
+                  color: 'var(--neon-cyan)',
+                }}
+              >
+                {showPinscoresLink ? 'Hide' : 'Show'} Link
+              </button>
+            </div>
+            
+            {showPinscoresLink && (
+              <div className="mb-3 p-3 rounded" style={{
+                background: 'rgba(139, 0, 255, 0.1)',
+                borderLeft: '3px solid var(--neon-purple)'
+              }}>
+                <p className="text-xs mb-2" style={{ color: 'var(--neon-purple)' }}>
+                  Check your score's percentile ranking on PinScores:
+                </p>
+                <a
+                  href={`https://pinscores.net/?search=${encodeURIComponent(showCustomTable ? customTable : table)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-semibold underline break-all hover:opacity-80 transition"
+                  style={{ color: 'var(--neon-cyan)' }}
+                >
+                  https://pinscores.net/?search={encodeURIComponent(showCustomTable ? customTable : table)}
+                </a>
+                <p className="text-xs mt-2" style={{ color: 'var(--neon-purple)', opacity: 0.8 }}>
+                  1. Click the link to open PinScores
+                  <br />2. Find your machine and enter your score
+                  <br />3. Copy the percentile value below
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
+                Percentile (0-100, optional)
+              </label>
+              <input
+                type="number"
+                value={manualPercentile}
+                onChange={(e) => setManualPercentile(e.target.value)}
+                placeholder="e.g., 85.5"
+                min="0"
+                max="100"
+                step="0.1"
+                className="w-full input-synthwave rounded px-4 py-2"
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
+                Leave empty to try automatic fetch (may not work if PinScores API is unavailable)
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Submit */}
         <button
