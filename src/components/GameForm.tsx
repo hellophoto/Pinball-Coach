@@ -35,6 +35,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [opdbLoading, setOpdbLoading] = useState(false);
   const [opdbSearchResults, setOpdbSearchResults] = useState<OPDBMachine[]>([]);
   const [selectedOPDBId, setSelectedOPDBId] = useState<string | undefined>();
+  const [locationErrorMessage, setLocationErrorMessage] = useState<string | null>(null);
 
   // Get unique venues and tables from existing games
   const games = getGames();
@@ -45,17 +46,30 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   useEffect(() => {
     const loadPinballMapData = async () => {
       setIsLoadingLocations(true);
+      setLocationErrorMessage(null);
       try {
         const settings = getSettings();
-        const locations = await getPinballMapLocations(
+        const result = await getPinballMapLocations(
           settings.location.city,
           settings.location.state,
-          settings.location.radius
+          settings.location.radius,
+          false, // don't force refresh
+          settings.location.useGeolocation,
+          settings.location.lastKnownLat,
+          settings.location.lastKnownLon
         );
-        setPinballMapLocations(locations);
+        setPinballMapLocations(result.locations);
+        
+        if (result.locations.length === 0 && result.errorMessage) {
+          setLocationErrorMessage(result.errorMessage);
+        } else if (result.errorMessage) {
+          // Show informational message but don't treat as error
+          console.log('Location info:', result.errorMessage);
+        }
       } catch (error) {
         console.error('Error loading Pinball Map data:', error);
-        // Fail silently - app still works without Pinball Map data
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        setLocationErrorMessage(`Unable to load venues: ${errorMsg}. Please check your location settings.`);
       } finally {
         setIsLoadingLocations(false);
       }
@@ -92,20 +106,49 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     }
   }, [venue, showCustomVenue, pinballMapLocations]);
 
-  // Combine venues from Pinball Map and existing games
-  const allVenues = Array.from(
-    new Set([
-      ...pinballMapLocations.map(loc => loc.name),
-      ...existingVenues,
-    ])
-  ).sort();
-
   // Helper function to validate and normalize percentile value
   const validatePercentile = (value: string): number | undefined => {
     if (!value) return undefined;
     const num = parseFloat(value);
     if (isNaN(num)) return undefined;
     return Math.max(0, Math.min(100, num));
+  };
+
+  // Refresh location data
+  const handleRefreshLocations = async () => {
+    setIsLoadingLocations(true);
+    setLocationErrorMessage(null);
+    try {
+      const settings = getSettings();
+      const result = await getPinballMapLocations(
+        settings.location.city,
+        settings.location.state,
+        settings.location.radius,
+        true, // force refresh
+        settings.location.useGeolocation,
+        settings.location.lastKnownLat,
+        settings.location.lastKnownLon
+      );
+      setPinballMapLocations(result.locations);
+      
+      if (result.locations.length === 0 && result.errorMessage) {
+        setLocationErrorMessage(result.errorMessage);
+      }
+    } catch (error) {
+      console.error('Error refreshing Pinball Map data:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setLocationErrorMessage(`Unable to refresh venues: ${errorMsg}`);
+    } finally {
+      setIsLoadingLocations(false);
+    }
+  };
+
+  // Format venue name with distance
+  const formatVenueName = (location: PinballMapLocation): string => {
+    if (location.distance !== undefined) {
+      return `${location.name} (${location.distance.toFixed(1)} mi)`;
+    }
+    return location.name;
   };
 
   // Handle table search for OPDB
@@ -231,15 +274,52 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
         </div>
       )}
       
+      {/* Location Error/Info Message */}
+      {locationErrorMessage && (
+        <div className="mb-4 rounded p-3 border-2" style={{
+          background: 'rgba(255, 153, 0, 0.1)',
+          borderColor: '#ff9900',
+          boxShadow: '0 0 10px rgba(255, 153, 0, 0.3)'
+        }}>
+          <p className="text-sm" style={{ color: '#ff9900' }}>
+            ⚠️ {locationErrorMessage}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.hash = '#/settings'}
+            className="mt-2 text-xs underline"
+            style={{ color: 'var(--neon-cyan)' }}
+          >
+            Update location settings →
+          </button>
+        </div>
+      )}
+      
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Venue */}
         <div>
-          <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>
-            Venue
-            {isLoadingLocations && <span className="ml-2 text-sm" style={{ color: 'var(--neon-purple)' }}>
-              (Loading Pinball Map data...)
-            </span>}
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label style={{ color: 'var(--neon-cyan)' }}>
+              Venue
+              {isLoadingLocations && <span className="ml-2 text-sm" style={{ color: 'var(--neon-purple)' }}>
+                (Loading nearby venues...)
+              </span>}
+            </label>
+            <button
+              type="button"
+              onClick={handleRefreshLocations}
+              disabled={isLoadingLocations}
+              className="text-xs px-2 py-1 rounded transition"
+              style={{
+                background: 'rgba(0, 255, 255, 0.1)',
+                border: '1px solid var(--neon-cyan)',
+                color: 'var(--neon-cyan)',
+              }}
+              title="Refresh venue list"
+            >
+              {isLoadingLocations ? '⏳' : '🔄'}
+            </button>
+          </div>
           {!showCustomVenue ? (
             <div className="flex gap-2">
               <select
@@ -247,9 +327,18 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 onChange={(e) => setVenue(e.target.value)}
                 className="flex-1 input-synthwave rounded px-4 py-2"
               >
-                <option value="">Select venue...</option>
-                {allVenues.map(v => (
-                  <option key={v} value={v}>{v}</option>
+                <option value="">
+                  {pinballMapLocations.length === 0 
+                    ? 'No venues found - Update settings or add custom venue' 
+                    : 'Select venue...'}
+                </option>
+                {pinballMapLocations.map(loc => (
+                  <option key={`pm-${loc.id}`} value={loc.name}>
+                    {formatVenueName(loc)}
+                  </option>
+                ))}
+                {existingVenues.filter(v => !pinballMapLocations.find(loc => loc.name === v)).map(v => (
+                  <option key={`ex-${v}`} value={v}>{v}</option>
                 ))}
               </select>
               <button

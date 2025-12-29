@@ -38,6 +38,9 @@ export interface PinballMapLocation {
   state: string;
   zip: string;
   machines: PinballMapMachine[];
+  lat?: number; // NEW - for distance calculation
+  lon?: number; // NEW - for distance calculation
+  distance?: number; // NEW - calculated distance from user
 }
 
 // Settings types
@@ -48,6 +51,10 @@ export interface Settings {
     zipCode?: string;
     radius: number; // miles
     opdbLastUpdated?: number;
+    useGeolocation?: boolean; // NEW
+    lastKnownLat?: number; // NEW
+    lastKnownLon?: number; // NEW
+    region?: string; // NEW (e.g., "portland", "seattle")
   };
   pinballMapLastUpdated?: number;
 }

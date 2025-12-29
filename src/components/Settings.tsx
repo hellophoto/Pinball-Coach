@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { TableStrategy, Settings as SettingsType } from '../types';
 import { getTableStrategies, saveTableStrategy, deleteTableStrategy, getSettings, saveSettings } from '../utils';
-import { clearPinballMapCache, getPinballMapCacheTimestamp, getPinballMapLocations } from '../services/pinballMapService';
+import { clearPinballMapCache, getPinballMapCacheTimestamp, getPinballMapLocations, getCurrentLocation, getRegionFromState } from '../services/pinballMapService';
 
 export const Settings: React.FC = () => {
   const [strategies, setStrategies] = useState<Record<string, TableStrategy>>(getTableStrategies());
@@ -19,8 +19,10 @@ export const Settings: React.FC = () => {
   // Location settings
   const [settings, setSettingsState] = useState<SettingsType>(getSettings());
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(getPinballMapCacheTimestamp());
+  const [venueCount, setVenueCount] = useState<number | null>(null);
 
   // Update cache timestamp when component mounts
   useEffect(() => {
@@ -83,12 +85,42 @@ export const Settings: React.FC = () => {
     });
   };
 
+  const handleUseCurrentLocation = async () => {
+    setIsFetchingLocation(true);
+    setLocationMessage(null);
+    
+    try {
+      const coords = await getCurrentLocation();
+      
+      // Update settings with coordinates
+      const updatedSettings: SettingsType = {
+        ...settings,
+        location: {
+          ...settings.location,
+          useGeolocation: true,
+          lastKnownLat: coords.lat,
+          lastKnownLon: coords.lon,
+        },
+        pinballMapLastUpdated: Date.now(),
+      };
+      saveSettings(updatedSettings);
+      setSettingsState(updatedSettings);
+      
+      setLocationMessage(`✅ Location found: ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setLocationMessage(`Error getting location: ${errorMsg}`);
+    } finally {
+      setIsFetchingLocation(false);
+    }
+  };
+
   const handleUpdateLocation = async () => {
     setIsUpdatingLocation(true);
     setLocationMessage(null);
     
     try {
-      // Save settings
+      // Save settings first
       const updatedSettings: SettingsType = {
         ...settings,
         pinballMapLastUpdated: Date.now(),
@@ -96,19 +128,77 @@ export const Settings: React.FC = () => {
       saveSettings(updatedSettings);
       setSettingsState(updatedSettings);
       
-      // Force refresh Pinball Map data
-      await getPinballMapLocations(
+      // Force refresh Pinball Map data with new cascading strategy
+      const result = await getPinballMapLocations(
         settings.location.city,
         settings.location.state,
         settings.location.radius,
-        true // force refresh
+        true, // force refresh
+        settings.location.useGeolocation,
+        settings.location.lastKnownLat,
+        settings.location.lastKnownLon
       );
       
       setCacheTimestamp(Date.now());
-      setLocationMessage('Location updated and Pinball Map data refreshed successfully!');
+      setVenueCount(result.locations.length);
+      
+      let message = `✅ Found ${result.locations.length} venue${result.locations.length !== 1 ? 's' : ''}`;
+      if (result.searchType === 'geolocation' && result.userCoordinates) {
+        message += ` within ${settings.location.radius} miles`;
+      } else if (result.searchType === 'region') {
+        const region = getRegionFromState(settings.location.state || '');
+        message += ` in ${region} region`;
+      } else if (result.searchType === 'city') {
+        message += ` in ${settings.location.city}`;
+      }
+      
+      if (result.errorMessage) {
+        message += `. Note: ${result.errorMessage}`;
+      }
+      
+      setLocationMessage(message);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
       setLocationMessage(`Error updating location: ${errorMsg}`);
+    } finally {
+      setIsUpdatingLocation(false);
+    }
+  };
+
+  const handleTestLocation = async () => {
+    setIsUpdatingLocation(true);
+    setLocationMessage(null);
+    
+    try {
+      const result = await getPinballMapLocations(
+        settings.location.city,
+        settings.location.state,
+        settings.location.radius,
+        true,
+        settings.location.useGeolocation,
+        settings.location.lastKnownLat,
+        settings.location.lastKnownLon
+      );
+      
+      setVenueCount(result.locations.length);
+      
+      let message = `🧪 Test Results: Found ${result.locations.length} venue${result.locations.length !== 1 ? 's' : ''}`;
+      if (result.searchType === 'geolocation') {
+        message += ` using geolocation`;
+      } else if (result.searchType === 'region') {
+        message += ` using region search`;
+      } else if (result.searchType === 'city') {
+        message += ` using city search`;
+      }
+      
+      if (result.errorMessage) {
+        message += `. ${result.errorMessage}`;
+      }
+      
+      setLocationMessage(message);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      setLocationMessage(`Test failed: ${errorMsg}`);
     } finally {
       setIsUpdatingLocation(false);
     }
@@ -170,6 +260,62 @@ export const Settings: React.FC = () => {
           }}>Location Configuration</h3>
           
           <div className="space-y-4">
+            {/* Geolocation Toggle */}
+            <div className="rounded p-4 border-2" style={{
+              background: 'rgba(0, 255, 255, 0.05)',
+              borderColor: 'var(--neon-cyan)',
+            }}>
+              <label className="flex items-center justify-between cursor-pointer">
+                <div>
+                  <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>
+                    📍 Use Geolocation
+                  </span>
+                  <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.8 }}>
+                    Automatically find nearby venues using your device's location
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.location.useGeolocation || false}
+                  onChange={(e) => setSettingsState({
+                    ...settings,
+                    location: { ...settings.location, useGeolocation: e.target.checked }
+                  })}
+                  className="ml-4 w-6 h-6"
+                  style={{ accentColor: 'var(--neon-cyan)' }}
+                />
+              </label>
+              
+              {/* Use Current Location Button */}
+              {settings.location.useGeolocation && (
+                <div className="mt-3">
+                  <button
+                    onClick={handleUseCurrentLocation}
+                    disabled={isFetchingLocation}
+                    className={`w-full py-2 px-4 rounded font-semibold transition ${
+                      isFetchingLocation
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:opacity-80'
+                    }`}
+                    style={{
+                      background: 'rgba(0, 255, 255, 0.2)',
+                      border: '2px solid var(--neon-cyan)',
+                      color: 'var(--neon-cyan)',
+                    }}
+                  >
+                    {isFetchingLocation ? '🔄 Getting Location...' : '📍 Use My Current Location'}
+                  </button>
+                  
+                  {/* Current Location Display */}
+                  {settings.location.lastKnownLat !== undefined && settings.location.lastKnownLon !== undefined && (
+                    <div className="mt-2 text-xs" style={{ color: 'var(--neon-purple)' }}>
+                      Current: {settings.location.lastKnownLat.toFixed(4)}, {settings.location.lastKnownLon.toFixed(4)}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
             {/* City */}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -219,7 +365,14 @@ export const Settings: React.FC = () => {
             
             {/* Radius */}
             <div>
-              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>Search Radius (miles)</label>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
+                Search Radius (miles)
+                {settings.location.useGeolocation && (
+                  <span className="ml-2 text-xs" style={{ color: 'var(--neon-purple)' }}>
+                    • Used for geolocation search
+                  </span>
+                )}
+              </label>
               <select
                 value={settings.location.radius}
                 onChange={(e) => setSettingsState({
@@ -232,31 +385,59 @@ export const Settings: React.FC = () => {
                 <option value="10">10 miles</option>
                 <option value="25">25 miles</option>
                 <option value="50">50 miles</option>
+                <option value="100">100 miles</option>
               </select>
             </div>
             
-            {/* Update Button */}
-            <button
-              onClick={handleUpdateLocation}
-              disabled={isUpdatingLocation}
-              className={`w-full font-semibold py-3 rounded-lg transition ${
-                isUpdatingLocation
-                  ? 'opacity-50 cursor-not-allowed bg-gray-700 border-2 border-gray-600 text-gray-400'
-                  : 'button-primary'
-              }`}
-            >
-              {isUpdatingLocation ? '🔄 Updating...' : '📍 Update Location'}
-            </button>
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={handleUpdateLocation}
+                disabled={isUpdatingLocation}
+                className={`font-semibold py-3 rounded-lg transition ${
+                  isUpdatingLocation
+                    ? 'opacity-50 cursor-not-allowed bg-gray-700 border-2 border-gray-600 text-gray-400'
+                    : 'button-primary'
+                }`}
+              >
+                {isUpdatingLocation ? '🔄 Updating...' : '📍 Update & Fetch'}
+              </button>
+              
+              <button
+                onClick={handleTestLocation}
+                disabled={isUpdatingLocation}
+                className={`font-semibold py-3 rounded-lg transition ${
+                  isUpdatingLocation
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
+                }`}
+                style={{
+                  background: isUpdatingLocation ? 'rgba(100, 100, 100, 0.3)' : 'rgba(139, 0, 255, 0.2)',
+                  border: '2px solid var(--neon-purple)',
+                  color: 'var(--neon-purple)',
+                }}
+              >
+                {isUpdatingLocation ? '⏳ Testing...' : '🧪 Test Settings'}
+              </button>
+            </div>
             
             {/* Cache Info */}
             <div className="stat-card rounded p-3 mt-4">
-              <div className="flex justify-between items-center text-sm mb-2">
-                <span style={{ color: 'var(--neon-purple)' }}>Last Updated:</span>
-                <span style={{ color: 'var(--neon-cyan)' }}>{formatLastUpdated(cacheTimestamp)}</span>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span style={{ color: 'var(--neon-purple)' }}>Last Updated:</span>
+                  <span style={{ color: 'var(--neon-cyan)' }}>{formatLastUpdated(cacheTimestamp)}</span>
+                </div>
+                {venueCount !== null && (
+                  <div className="flex justify-between items-center">
+                    <span style={{ color: 'var(--neon-purple)' }}>Venues Found:</span>
+                    <span style={{ color: 'var(--neon-cyan)' }}>{venueCount}</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={handleClearCache}
-                className="w-full button-secondary py-2 rounded font-semibold text-sm"
+                className="w-full button-secondary py-2 rounded font-semibold text-sm mt-3"
               >
                 🗑️ Clear Cache
               </button>
