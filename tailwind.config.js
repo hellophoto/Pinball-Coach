@@ -9,6 +9,9 @@ export default {
       fontFamily: {
         sans: ['Orbitron', 'sans-serif'],
       },
+      screens: {
+        'xs': '375px',
+      },
     },
   },
   plugins: [],
