@@ -41,16 +41,20 @@ function App() {
   return (
     <div className="min-h-screen" style={{ position: 'relative', zIndex: 1 }}>
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-effect" style={{ 
+      <header className="sticky top-0 z-10 glass-effect max-h-20" style={{ 
         borderBottom: '2px solid var(--neon-purple)',
         boxShadow: '0 0 20px var(--neon-purple)'
       }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-center mb-4">
-            <img src="/pinball-coach-logo.jpg" alt="Pinball Coach" className="h-[30px]" />
+          <div className="flex items-center justify-center gap-3">
+            <img 
+              src="/pinball-coach-logo.jpg" 
+              alt="Pinball Coach" 
+              className="max-h-8 xs:max-h-10 md:max-h-12 w-auto object-contain" 
+            />
           </div>
           {/* Navigation */}
-          <nav className="flex flex-col sm:flex-row gap-2">
+          <nav className="flex flex-col sm:flex-row gap-2 mt-3">
             <button
               onClick={() => {
                 setView('dashboard');
