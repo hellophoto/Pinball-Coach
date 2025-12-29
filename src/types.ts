@@ -14,6 +14,8 @@ export interface Game {
   source?: 'manual' | 'ifpa';
   percentile?: number; // 0-100, from PinScores API
   opdb_id?: string;
+  photo?: string; // base64 encoded photo of scoreboard
+  photoThumbnail?: string; // compressed thumbnail for display
 }
 
 export interface TableStrategy {
