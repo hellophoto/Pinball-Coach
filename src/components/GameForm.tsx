@@ -7,6 +7,9 @@ import { fetchPercentileWithTimeout } from '../services/pinScoresService';
 import { getOPDBMachines, searchMachinesByName, formatMachineDetails } from '../services/opdbService';
 import { TipModal } from './TipModal';
 
+// Animation duration constant (matches CSS animation in index.css)
+const MACHINE_SELECT_ANIMATION_DURATION = 800; // milliseconds
+
 interface GameFormProps {
   onGameAdded: () => void;
 }
@@ -400,7 +403,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                     setShowAvailableMachines(false);
                     // Trigger selection animation
                     setAnimatingMachineId(machine.id);
-                    setTimeout(() => setAnimatingMachineId(null), 800);
+                    setTimeout(() => setAnimatingMachineId(null), MACHINE_SELECT_ANIMATION_DURATION);
                   }}
                   className={`text-left px-3 py-2 rounded text-sm transition border-2 machine-button-hover ${
                     table === machine.name
