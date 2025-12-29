@@ -12,6 +12,11 @@ A lightweight mobile-first web application to help track personal pinball stats 
 - **Mobile-First Responsive Design**: Optimized for mobile, tablet, and desktop with proper breakpoints
 - **Synthwave Theme**: Retro neon aesthetic with CRT scanlines, glowing borders, and cyberpunk vibes
 
+### Tips & Coaching
+- **Post-Game Tips Modal**: After saving a game, receive machine-specific strategy tips and coaching advice
+- **Contextual Guidance**: Tips are automatically displayed based on the table you played
+- **Strategy Reinforcement**: Learn key strategies and improve your gameplay over time
+
 ### Pinball Map Integration
 - **Location-Based Discovery**: Automatically fetch nearby pinball venues based on your city
 - **Available Tables View**: See which tables are available at each venue before playing
@@ -22,9 +27,17 @@ A lightweight mobile-first web application to help track personal pinball stats 
 
 ### PinScores Integration
 - **Percentile Rankings**: Automatically fetch your score's percentile ranking from PinScores.net
+- **Manual Percentile Entry**: Manually enter percentile data with a direct link to pinscores.net for easy lookup
 - **Visual Percentile Badges**: See percentile rankings displayed on your high scores and game history
 - **Background Fetching**: Percentile data is fetched asynchronously so it doesn't slow down game entry
 - **Graceful Degradation**: App works perfectly even if PinScores API is unavailable
+
+### OPDB Integration
+- **Open Pinball Database**: Integration with OPDB for comprehensive machine data
+- **Machine Search**: Search and select machines from the OPDB database during game entry
+- **Automatic Caching**: Machine data is fetched and cached locally for improved performance
+- **Machine Metadata**: Track production counts and other machine details
+- **Enhanced Game Form**: GameForm includes OPDB-powered machine search and selection
 
 ### Strategy Management
 - **Pre-game Strategy View**: View table-specific strategies during game entry including:
@@ -50,6 +63,7 @@ A lightweight mobile-first web application to help track personal pinball stats 
 - Pinball Map API for venue/table discovery
 - PinScores API for percentile rankings
 - IFPA API for tournament data
+- OPDB API for machine database
 
 ## Getting Started
 
@@ -91,13 +105,14 @@ The production build will be created in the `dist` directory.
 2. Select a venue from the dropdown (includes Pinball Map venues and your custom venues)
    - Or click "New" to add a custom venue
 3. If you selected a Pinball Map venue, you'll see available tables at that location
-4. Select a table or add a custom one
+4. Select a table from OPDB search or add a custom one
 5. View pre-game strategies if available for the selected table
 6. Choose game type (Competitive or Practice)
 7. Enter your score (and opponent's score for competitive games)
-8. Optionally add notes
+8. Optionally add notes or manually enter a percentile ranking (with link to pinscores.net)
 9. Click "Save Game"
 10. The app will automatically fetch your percentile ranking from PinScores in the background
+11. A post-game tip modal will appear with machine-specific coaching advice
 
 ### Managing Table Strategies
 
@@ -151,6 +166,7 @@ View all games in the History tab. Each game displays:
 Each game stores:
 - `venue`: Location where the game was played
 - `table`: Pinball table/machine name
+- `opdb_id`: Open Pinball Database machine identifier
 - `myScore`: Your score
 - `opponentScore`: Opponent's score (for competitive games)
 - `gameType`: Either "competitive" or "practice"
@@ -184,7 +200,7 @@ Settings store:
 - Orbitron font for that retro-future feel
 - Smooth hover animations and transitions
 
-**Graceful Degradation**: All API integrations (Pinball Map, PinScores, IFPA) fail gracefully - the app remains fully functional even if external services are unavailable.
+**Graceful Degradation**: All API integrations (Pinball Map, PinScores, IFPA, OPDB) fail gracefully - the app remains fully functional even if external services are unavailable.
 
 **Privacy-First**: All data is stored locally in your browser using localStorage. No server-side storage or tracking.
 
@@ -200,12 +216,19 @@ Settings store:
 - Fetched asynchronously in the background
 - Has a 5-second timeout to prevent hanging
 - Fails gracefully if unavailable
+- Manual entry option with direct link to pinscores.net
 
 ### IFPA API
 - Used for importing tournament results
 - Manual sync triggered by user
 - Duplicate detection prevents re-importing
 
+### OPDB API
+- Used for machine database and metadata
+- Provides comprehensive machine information
+- Data is cached locally for performance
+- Enhances game entry with searchable machine database
+
 ## Tags
 
-`pinball` `react` `typescript` `vite` `tailwindcss` `mobile-first` `pwa` `ifpa` `statistics` `game-tracking` `strategy` `tournament` `synthwave` `retro` `pinball-map` `pinscores` `percentile-tracking`
+`pinball` `react` `typescript` `vite` `tailwindcss` `mobile-first` `pwa` `ifpa` `statistics` `game-tracking` `strategy` `tournament` `synthwave` `retro` `pinball-map` `pinscores` `percentile-tracking` `opdb` `coaching` `tips`
