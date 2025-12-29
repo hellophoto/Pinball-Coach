@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { getRandomTip, getTipsForTable, getFallbackTip } from '../data/machineTips';
 
 interface TipModalProps {
@@ -11,9 +11,12 @@ export const TipModal: React.FC<TipModalProps> = ({ tableName, onClose, showAllT
   const machineData = getTipsForTable(tableName);
   const hasTips = machineData !== null;
   
-  // For post-game modal, show one random tip
+  // For post-game modal, show one random tip (memoized to avoid recalculation)
   // For view tips button, show all tips
-  const displayTip = showAllTips ? null : getRandomTip(tableName);
+  const displayTip = useMemo(
+    () => (showAllTips ? null : getRandomTip(tableName)),
+    [showAllTips, tableName]
+  );
   const allTips = showAllTips && machineData ? machineData.tips : [];
 
   return (
