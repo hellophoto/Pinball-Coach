@@ -77,6 +77,14 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     ])
   ).sort();
 
+  // Helper function to validate and normalize percentile value
+  const validatePercentile = (value: string): number | undefined => {
+    if (!value) return undefined;
+    const num = parseFloat(value);
+    if (isNaN(num)) return undefined;
+    return Math.max(0, Math.min(100, num));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -99,10 +107,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     }
 
     // Use manual percentile if provided
-    const manualPercentileNum = manualPercentile ? parseFloat(manualPercentile) : undefined;
-    const initialPercentile = manualPercentileNum !== undefined && !isNaN(manualPercentileNum) 
-      ? Math.max(0, Math.min(100, manualPercentileNum))
-      : undefined;
+    const initialPercentile = validatePercentile(manualPercentile);
 
     // Add game with manual percentile if provided
     const newGame = addGame({
@@ -440,30 +445,33 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
               </button>
             </div>
             
-            {showPinscoresLink && (
-              <div className="mb-3 p-3 rounded" style={{
-                background: 'rgba(139, 0, 255, 0.1)',
-                borderLeft: '3px solid var(--neon-purple)'
-              }}>
-                <p className="text-xs mb-2" style={{ color: 'var(--neon-purple)' }}>
-                  Check your score's percentile ranking on PinScores:
-                </p>
-                <a
-                  href={`https://pinscores.net/?search=${encodeURIComponent(showCustomTable ? customTable : table)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-semibold underline break-all hover:opacity-80 transition"
-                  style={{ color: 'var(--neon-cyan)' }}
-                >
-                  https://pinscores.net/?search={encodeURIComponent(showCustomTable ? customTable : table)}
-                </a>
-                <p className="text-xs mt-2" style={{ color: 'var(--neon-purple)', opacity: 0.8 }}>
-                  1. Click the link to open PinScores
-                  <br />2. Find your machine and enter your score
-                  <br />3. Copy the percentile value below
-                </p>
-              </div>
-            )}
+            {showPinscoresLink && (() => {
+              const pinscoresUrl = `https://pinscores.net/?search=${encodeURIComponent(showCustomTable ? customTable : table)}`;
+              return (
+                <div className="mb-3 p-3 rounded" style={{
+                  background: 'rgba(139, 0, 255, 0.1)',
+                  borderLeft: '3px solid var(--neon-purple)'
+                }}>
+                  <p className="text-xs mb-2" style={{ color: 'var(--neon-purple)' }}>
+                    Check your score's percentile ranking on PinScores:
+                  </p>
+                  <a
+                    href={pinscoresUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="text-xs font-semibold underline break-all hover:opacity-80 transition"
+                    style={{ color: 'var(--neon-cyan)' }}
+                  >
+                    {pinscoresUrl}
+                  </a>
+                  <p className="text-xs mt-2" style={{ color: 'var(--neon-purple)', opacity: 0.8 }}>
+                    1. Click the link to open PinScores
+                    <br />2. Find your machine and enter your score
+                    <br />3. Copy the percentile value below
+                  </p>
+                </div>
+              );
+            })()}
 
             <div>
               <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
