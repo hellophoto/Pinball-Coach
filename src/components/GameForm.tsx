@@ -264,7 +264,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
       setShowScoreSelectionModal(true);
     } catch (error) {
       console.error('Error processing photo:', error);
-      alert('Failed to extract scores from the photo. Please try again with better lighting or enter scores manually.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to extract scores from the photo: ${errorMessage}. Please try again with better lighting and a clear view of the scoreboard, or enter scores manually.`);
       setCapturedPhoto(null);
     } finally {
       setIsProcessingOCR(false);
@@ -284,6 +285,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
         setPhotoThumbnail(thumbnail);
       } catch (error) {
         console.error('Error preparing photo for storage:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        alert(`Failed to compress photo: ${errorMessage}. The photo will not be saved with this game.`);
         // Continue without photo storage
         setCapturedPhoto(null);
         setPhotoThumbnail(null);

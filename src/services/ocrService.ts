@@ -107,6 +107,10 @@ export const preprocessImage = (base64Image: string): Promise<string> => {
   });
 };
 
+// Constants for score extraction
+const MIN_SCORE_THRESHOLD = 1000; // Minimum score value to consider valid (filters out small numbers)
+const MAX_PLAYERS = 4; // Maximum number of player scores to extract
+
 /**
  * Extract numbers from an image using Tesseract OCR
  */
@@ -133,7 +137,6 @@ export const extractScoresFromImage = async (
 
     // Extract all numbers from the text
     const text = result.data.text;
-    console.log('OCR extracted text:', text);
 
     // Find all numbers in the text (including large scores with commas)
     const numberPattern = /\d[\d,]*\d|\d/g;
@@ -143,11 +146,9 @@ export const extractScoresFromImage = async (
     const numbers = matches
       .map(match => parseInt(match.replace(/,/g, ''), 10))
       .filter(num => !isNaN(num) && num > 0)
-      .filter(num => num >= 1000) // Filter out small numbers (likely not scores)
+      .filter(num => num >= MIN_SCORE_THRESHOLD) // Filter out small numbers (likely not scores)
       .sort((a, b) => b - a) // Sort descending (highest scores first)
-      .slice(0, 4); // Take top 4 scores
-
-    console.log('Extracted scores:', numbers);
+      .slice(0, MAX_PLAYERS); // Take top player scores
 
     return numbers;
   } catch (error) {
