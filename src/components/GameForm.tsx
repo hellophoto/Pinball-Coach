@@ -34,6 +34,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [opdbMachines, setOpdbMachines] = useState<OPDBMachine[]>([]);
   const [opdbLoading, setOpdbLoading] = useState(false);
   const [opdbSearchResults, setOpdbSearchResults] = useState<OPDBMachine[]>([]);
+  const [selectedOPDBId, setSelectedOPDBId] = useState<string | undefined>();
 
   // Get unique venues and tables from existing games
   const games = getGames();
@@ -124,6 +125,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   // Handle selecting a machine from OPDB search results
   const handleSelectOPDBMachine = (machine: OPDBMachine) => {
     setCustomTable(machine.name);
+    setSelectedOPDBId(machine.opdb_id);
     setOpdbSearchResults([]);
   };
 
@@ -151,7 +153,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     // Use manual percentile if provided
     const initialPercentile = validatePercentile(manualPercentile);
 
-    // Add game with manual percentile if provided
+    // Add game with manual percentile and opdb_id if provided
     const newGame = addGame({
       venue: finalVenue,
       table: finalTable,
@@ -161,6 +163,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       result,
       notes,
       percentile: initialPercentile,
+      opdb_id: selectedOPDBId,
     });
 
     // Only fetch percentile automatically if not manually provided
@@ -199,6 +202,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     setShowCustomTable(false);
     setManualPercentile('');
     setShowPinscoresLink(false);
+    setSelectedOPDBId(undefined);
+    setOpdbSearchResults([]);
     
     // Show tip modal with the table that was just played
     setTipModalTable(finalTable);

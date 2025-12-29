@@ -14,7 +14,8 @@ function App() {
 
   // Initialize OPDB sync on mount
   useEffect(() => {
-    initializeOPDBSync();
+    const cleanup = initializeOPDBSync();
+    return cleanup;
   }, []);
 
   const handleGameAdded = () => {

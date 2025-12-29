@@ -1,31 +1,8 @@
 import { getCache, setCache, CACHE_EXPIRATION_MS } from '../utils/cache';
+import type { OPDBMachine } from '../types';
 
 const OPDB_URL = 'https://mp-data.sfo3.cdn.digitaloceanspaces.com/latest-opdb.json';
 const CACHE_KEY = 'pinball-coach-opdb-cache';
-
-// OPDB Machine Interface
-export interface OPDBMachine {
-  opdb_id: string;
-  name: string;
-  short_name?: string;
-  manufacturer?: string;
-  year?: number;
-  type?: string;
-  theme?: string[];
-  designer?: string[];
-  artist?: string[];
-  ipdb_id?: number;
-  machine_group_id?: string;
-  production_count?: number;
-  model_number?: string;
-  common_names?: string[];
-  description?: string;
-  features?: string[];
-  notes?: string[];
-  toys?: string[];
-  rule_complexity?: number;
-  gameplay_complexity?: number;
-}
 
 /**
  * Fetch fresh OPDB data from the API
