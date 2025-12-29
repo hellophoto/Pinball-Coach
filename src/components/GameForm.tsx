@@ -493,72 +493,6 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
       )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Photo Capture Section */}
-        {!isEditMode && (
-          <div>
-            <PhotoCapture 
-              onPhotoCapture={handlePhotoCapture}
-              disabled={isProcessingOCR}
-            />
-            
-            {/* Photo Storage Toggle */}
-            <div className="mt-3 flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={enablePhotoStorage}
-                  onChange={(e) => setEnablePhotoStorage(e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm" style={{ color: 'var(--neon-purple)' }}>
-                  Save photo with game (recommended)
-                </span>
-              </label>
-            </div>
-          </div>
-        )}
-        
-        {/* Photo Thumbnail Display */}
-        {(photoThumbnail || capturedPhoto) && (
-          <div className="rounded-lg p-4 border-2" style={{
-            background: 'rgba(0, 255, 255, 0.05)',
-            borderColor: 'var(--neon-cyan)',
-            boxShadow: '0 0 10px var(--neon-cyan)'
-          }}>
-            <div className="flex items-start gap-3">
-              <img 
-                src={photoThumbnail || capturedPhoto || ''}
-                alt="Scoreboard" 
-                className="w-24 h-24 object-cover rounded border-2"
-                style={{
-                  borderColor: 'var(--neon-purple)',
-                  boxShadow: '0 0 10px var(--neon-purple)'
-                }}
-              />
-              <div className="flex-1">
-                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--neon-cyan)' }}>
-                  📸 Photo Attached
-                </div>
-                <p className="text-xs mb-2" style={{ color: 'var(--neon-purple)' }}>
-                  Your scoreboard photo will be saved with this game
-                </p>
-                <button
-                  type="button"
-                  onClick={handleRemovePhoto}
-                  className="text-xs px-3 py-1 rounded border transition"
-                  style={{
-                    borderColor: '#ff0066',
-                    color: '#ff0066',
-                    background: 'rgba(255, 0, 102, 0.1)'
-                  }}
-                >
-                  Remove Photo
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
         {/* Venue */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -845,6 +779,72 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
             </label>
           </div>
         </div>
+
+        {/* Photo Capture Section */}
+        {!isEditMode && (table || customTable) && (
+          <div>
+            <PhotoCapture 
+              onPhotoCapture={handlePhotoCapture}
+              disabled={isProcessingOCR}
+            />
+            
+            {/* Photo Storage Toggle */}
+            <div className="mt-3 flex items-center justify-between">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enablePhotoStorage}
+                  onChange={(e) => setEnablePhotoStorage(e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-sm" style={{ color: 'var(--neon-purple)' }}>
+                  Save photo with game (recommended)
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+        
+        {/* Photo Thumbnail Display */}
+        {(photoThumbnail || capturedPhoto) && (
+          <div className="rounded-lg p-4 border-2" style={{
+            background: 'rgba(0, 255, 255, 0.05)',
+            borderColor: 'var(--neon-cyan)',
+            boxShadow: '0 0 10px var(--neon-cyan)'
+          }}>
+            <div className="flex items-start gap-3">
+              <img 
+                src={photoThumbnail || capturedPhoto || ''}
+                alt="Scoreboard" 
+                className="w-24 h-24 object-cover rounded border-2"
+                style={{
+                  borderColor: 'var(--neon-purple)',
+                  boxShadow: '0 0 10px var(--neon-purple)'
+                }}
+              />
+              <div className="flex-1">
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--neon-cyan)' }}>
+                  📸 Photo Attached
+                </div>
+                <p className="text-xs mb-2" style={{ color: 'var(--neon-purple)' }}>
+                  Your scoreboard photo will be saved with this game
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  className="text-xs px-3 py-1 rounded border transition"
+                  style={{
+                    borderColor: '#ff0066',
+                    color: '#ff0066',
+                    background: 'rgba(255, 0, 102, 0.1)'
+                  }}
+                >
+                  Remove Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Scores */}
         <div className="grid grid-cols-2 gap-4">
