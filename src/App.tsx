@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GameForm } from './components/GameForm';
 import { Dashboard } from './components/Dashboard';
 import { GameHistory } from './components/GameHistory';
 import { Settings } from './components/Settings';
+import { initializeOPDBSync } from './utils/opdbSync';
 import './App.css';
 
 type View = 'form' | 'dashboard' | 'history' | 'settings';
@@ -10,6 +11,12 @@ type View = 'form' | 'dashboard' | 'history' | 'settings';
 function App() {
   const [view, setView] = useState<View>('dashboard');
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Initialize OPDB sync on mount
+  useEffect(() => {
+    const cleanup = initializeOPDBSync();
+    return cleanup;
+  }, []);
 
   const handleGameAdded = () => {
     setRefreshKey(prev => prev + 1);
