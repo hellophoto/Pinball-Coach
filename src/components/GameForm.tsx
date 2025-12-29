@@ -7,6 +7,9 @@ import { fetchPercentileWithTimeout } from '../services/pinScoresService';
 import { getOPDBMachines, searchMachinesByName, formatMachineDetails } from '../services/opdbService';
 import { TipModal } from './TipModal';
 
+// Animation duration constant (matches CSS animation in index.css)
+const MACHINE_SELECT_ANIMATION_DURATION = 800; // milliseconds
+
 interface GameFormProps {
   onGameAdded: () => void;
 }
@@ -36,11 +39,20 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [opdbSearchResults, setOpdbSearchResults] = useState<OPDBMachine[]>([]);
   const [selectedOPDBId, setSelectedOPDBId] = useState<string | undefined>();
   const [locationErrorMessage, setLocationErrorMessage] = useState<string | null>(null);
+  const [showAvailableMachines, setShowAvailableMachines] = useState(true);
+  const [animatingMachineId, setAnimatingMachineId] = useState<number | null>(null);
 
   // Get unique venues and tables from existing games
   const games = getGames();
   const existingVenues = Array.from(new Set(games.map(g => g.venue))).sort();
   const existingTables = Array.from(new Set(games.map(g => g.table))).sort();
+  
+  // Include selected location machines in the table dropdown
+  const availableTables = React.useMemo(() => {
+    const machineNames = selectedLocation?.machines.map(m => m.name) || [];
+    const allTables = [...new Set([...existingTables, ...machineNames])];
+    return allTables.sort();
+  }, [existingTables, selectedLocation]);
 
   // Load Pinball Map locations on mount
   useEffect(() => {
@@ -101,10 +113,31 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     if (!showCustomVenue && venue) {
       const location = pinballMapLocations.find(loc => loc.name === venue);
       setSelectedLocation(location || null);
+      // Show available machines list when a new venue is selected
+      if (location && location.machines.length > 0) {
+        setShowAvailableMachines(true);
+      }
     } else {
       setSelectedLocation(null);
     }
   }, [venue, showCustomVenue, pinballMapLocations]);
+
+  // Cleanup animation timeout on unmount
+  useEffect(() => {
+    let animationTimeout: number | null = null;
+    
+    if (animatingMachineId !== null) {
+      animationTimeout = setTimeout(() => {
+        setAnimatingMachineId(null);
+      }, MACHINE_SELECT_ANIMATION_DURATION);
+    }
+    
+    return () => {
+      if (animationTimeout) {
+        clearTimeout(animationTimeout);
+      }
+    };
+  }, [animatingMachineId]);
 
   // Helper function to validate and normalize percentile value
   const validatePercentile = (value: string): number | undefined => {
@@ -370,7 +403,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
         </div>
 
         {/* Available Tables from Pinball Map */}
-        {selectedLocation && selectedLocation.machines.length > 0 && (
+        {selectedLocation && selectedLocation.machines.length > 0 && showAvailableMachines && (
           <div className="stat-card rounded-lg p-4">
             <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--neon-cyan)' }}>
               📍 Available Tables at {selectedLocation.name}
@@ -383,12 +416,16 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                   onClick={() => {
                     setTable(machine.name);
                     setShowCustomTable(false);
+                    // Hide the available machines list
+                    setShowAvailableMachines(false);
+                    // Trigger selection animation (cleanup handled by useEffect)
+                    setAnimatingMachineId(machine.id);
                   }}
-                  className={`text-left px-3 py-2 rounded text-sm transition border-2 ${
+                  className={`text-left px-3 py-2 rounded text-sm transition border-2 machine-button-hover ${
                     table === machine.name
                       ? 'border-cyan-400'
                       : 'border-purple-600'
-                  }`}
+                  } ${animatingMachineId === machine.id ? 'machine-select-glow' : ''}`}
                   style={{
                     background: table === machine.name 
                       ? 'rgba(0, 255, 255, 0.2)' 
@@ -398,7 +435,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                       : 'var(--neon-purple)',
                     boxShadow: table === machine.name 
                       ? '0 0 10px var(--neon-cyan)' 
-                      : 'none'
+                      : 'none',
+                    cursor: 'pointer'
                   }}
                 >
                   {machine.name}
@@ -424,7 +462,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 className="flex-1 input-synthwave rounded px-4 py-2"
               >
                 <option value="">Select table...</option>
-                {existingTables.map(t => (
+                {availableTables.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
