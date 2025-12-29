@@ -1,118 +1,119 @@
 import { useState, useEffect } from 'react';
+import { GameForm } from './components/GameForm';
+import { Dashboard } from './components/Dashboard';
+import { GameHistory } from './components/GameHistory';
+import { Settings } from './components/Settings';
+import { initializeOPDBSync } from './utils/opdbSync';
 import './App.css';
-import { MachineSelector } from './components/MachineSelector';
-import { QuestionPanel } from './components/QuestionPanel';
-import { AnswerPanel } from './components/AnswerPanel';
-import { ProgressIndicator } from './components/ProgressIndicator';
-import { GameCompletionModal } from './components/GameCompletionModal';
-import { machines } from './data/machines';
-import { Question } from './types';
+
+type View = 'form' | 'dashboard' | 'history' | 'settings';
 
 function App() {
-  const [selectedMachine, setSelectedMachine] = useState<string>('');
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
-  const [gameComplete, setGameComplete] = useState(false);
+  const [view, setView] = useState<View>('dashboard');
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [editGameId, setEditGameId] = useState<string | undefined>(undefined);
 
+  // Initialize OPDB sync on mount
   useEffect(() => {
-    if (selectedMachine) {
-      const machine = machines.find(m => m.id === selectedMachine);
-      if (machine) {
-        setQuestions(machine.questions);
-        setCurrentQuestionIndex(0);
-        setScore(0);
-        setAnsweredQuestions(new Set());
-        setGameComplete(false);
-      }
-    }
-  }, [selectedMachine]);
+    const cleanup = initializeOPDBSync();
+    return cleanup;
+  }, []);
 
-  const handleAnswerSelect = (answerIndex: number) => {
-    if (answeredQuestions.has(currentQuestionIndex)) return;
-    
-    setSelectedAnswer(answerIndex);
-    setShowResult(true);
-    
-    if (answerIndex === questions[currentQuestionIndex].correctAnswer) {
-      setScore(score + 1);
-    }
-    
-    setAnsweredQuestions(new Set([...answeredQuestions, currentQuestionIndex]));
+  const handleGameAdded = () => {
+    setRefreshKey(prev => prev + 1);
+    setEditGameId(undefined);
+    setView('dashboard');
+  };
+
+  const handleGameDeleted = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleIFPASync = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+  
+  const handleEditGame = (gameId: string) => {
+    setEditGameId(gameId);
+    setView('form');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white p-4">
-      <div className="max-w-4xl mx-auto py-8">
-        <div className="flex justify-center mb-4"><img src="/logo.png" alt="Pinball Coach" className="h-[100px]" /></div>
-        
-        {!selectedMachine ? (
-          <MachineSelector 
-            machines={machines}
-            onSelect={setSelectedMachine}
-          />
-        ) : (
-          <>
-            <ProgressIndicator 
-              current={currentQuestionIndex}
-              total={questions.length}
-              score={score}
-            />
-            
-            <QuestionPanel 
-              question={questions[currentQuestionIndex]}
-              questionNumber={currentQuestionIndex + 1}
-              totalQuestions={questions.length}
-            />
-            
-            <AnswerPanel 
-              answers={questions[currentQuestionIndex].answers}
-              selectedAnswer={selectedAnswer}
-              correctAnswer={questions[currentQuestionIndex].correctAnswer}
-              showResult={showResult}
-              onAnswerSelect={handleAnswerSelect}
-              isAnswered={answeredQuestions.has(currentQuestionIndex)}
-              onNext={() => {
-                if (currentQuestionIndex < questions.length - 1) {
-                  setCurrentQuestionIndex(currentQuestionIndex + 1);
-                  setSelectedAnswer(null);
-                  setShowResult(false);
-                } else {
-                  setGameComplete(true);
-                }
-              }}
-              isLastQuestion={currentQuestionIndex === questions.length - 1}
-            />
-            
+    <div className="min-h-screen" style={{ position: 'relative', zIndex: 1 }}>
+      {/* Header */}
+      <header className="sticky top-0 z-10 glass-effect" style={{ 
+        borderBottom: '2px solid var(--neon-purple)',
+        boxShadow: '0 0 20px var(--neon-purple)'
+      }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-center mb-4">
+            <img src="/logo.png" alt="Pinball Coach" className="h-[100px]" />
+          </div>
+          {/* Navigation */}
+          <nav className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => {
-                setSelectedMachine('');
-                setSelectedAnswer(null);
-                setShowResult(false);
+                setView('dashboard');
+                setEditGameId(undefined);
               }}
-              className="mt-6 w-full py-3 px-6 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'dashboard' ? 'nav-button-active' : ''
+              }`}
             >
-              ← Back to Machine Selection
+              Dashboard
             </button>
-          </>
+            <button
+              onClick={() => {
+                setView('form');
+                setEditGameId(undefined);
+              }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'form' ? 'nav-button-active' : ''
+              }`}
+            >
+              Add Game
+            </button>
+            <button
+              onClick={() => {
+                setView('history');
+                setEditGameId(undefined);
+              }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'history' ? 'nav-button-active' : ''
+              }`}
+            >
+              History
+            </button>
+            <button
+              onClick={() => {
+                setView('settings');
+                setEditGameId(undefined);
+              }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'settings' ? 'nav-button-active' : ''
+              }`}
+            >
+              Settings
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {view === 'dashboard' && (
+          <div key={refreshKey}>
+            <Dashboard onSyncComplete={handleIFPASync} />
+          </div>
         )}
-      </div>
-      
-      {gameComplete && (
-        <GameCompletionModal 
-          score={score}
-          total={questions.length}
-          onClose={() => {
-            setSelectedMachine('');
-            setSelectedAnswer(null);
-            setShowResult(false);
-            setGameComplete(false);
-          }}
-        />
-      )}
+        {view === 'form' && <GameForm onGameAdded={handleGameAdded} editGameId={editGameId} />}
+        {view === 'history' && (
+          <div key={refreshKey}>
+            <GameHistory onGameDeleted={handleGameDeleted} onEditGame={handleEditGame} />
+          </div>
+        )}
+        {view === 'settings' && <Settings />}
+      </main>
     </div>
   );
 }
