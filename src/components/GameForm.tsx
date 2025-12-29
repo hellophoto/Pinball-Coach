@@ -36,11 +36,20 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [opdbSearchResults, setOpdbSearchResults] = useState<OPDBMachine[]>([]);
   const [selectedOPDBId, setSelectedOPDBId] = useState<string | undefined>();
   const [locationErrorMessage, setLocationErrorMessage] = useState<string | null>(null);
+  const [showAvailableMachines, setShowAvailableMachines] = useState(true);
+  const [animatingMachineId, setAnimatingMachineId] = useState<number | null>(null);
 
   // Get unique venues and tables from existing games
   const games = getGames();
   const existingVenues = Array.from(new Set(games.map(g => g.venue))).sort();
   const existingTables = Array.from(new Set(games.map(g => g.table))).sort();
+  
+  // Include selected location machines in the table dropdown
+  const availableTables = React.useMemo(() => {
+    const machineNames = selectedLocation?.machines.map(m => m.name) || [];
+    const allTables = [...new Set([...existingTables, ...machineNames])];
+    return allTables.sort();
+  }, [existingTables, selectedLocation]);
 
   // Load Pinball Map locations on mount
   useEffect(() => {
@@ -101,6 +110,10 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     if (!showCustomVenue && venue) {
       const location = pinballMapLocations.find(loc => loc.name === venue);
       setSelectedLocation(location || null);
+      // Show available machines list when a new venue is selected
+      if (location && location.machines.length > 0) {
+        setShowAvailableMachines(true);
+      }
     } else {
       setSelectedLocation(null);
     }
@@ -370,7 +383,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
         </div>
 
         {/* Available Tables from Pinball Map */}
-        {selectedLocation && selectedLocation.machines.length > 0 && (
+        {selectedLocation && selectedLocation.machines.length > 0 && showAvailableMachines && (
           <div className="stat-card rounded-lg p-4">
             <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--neon-cyan)' }}>
               📍 Available Tables at {selectedLocation.name}
@@ -383,12 +396,17 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                   onClick={() => {
                     setTable(machine.name);
                     setShowCustomTable(false);
+                    // Hide the available machines list
+                    setShowAvailableMachines(false);
+                    // Trigger selection animation
+                    setAnimatingMachineId(machine.id);
+                    setTimeout(() => setAnimatingMachineId(null), 800);
                   }}
-                  className={`text-left px-3 py-2 rounded text-sm transition border-2 ${
+                  className={`text-left px-3 py-2 rounded text-sm transition border-2 machine-button-hover ${
                     table === machine.name
                       ? 'border-cyan-400'
                       : 'border-purple-600'
-                  }`}
+                  } ${animatingMachineId === machine.id ? 'machine-select-glow' : ''}`}
                   style={{
                     background: table === machine.name 
                       ? 'rgba(0, 255, 255, 0.2)' 
@@ -398,7 +416,8 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                       : 'var(--neon-purple)',
                     boxShadow: table === machine.name 
                       ? '0 0 10px var(--neon-cyan)' 
-                      : 'none'
+                      : 'none',
+                    cursor: 'pointer'
                   }}
                 >
                   {machine.name}
@@ -424,7 +443,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
                 className="flex-1 input-synthwave rounded px-4 py-2"
               >
                 <option value="">Select table...</option>
-                {existingTables.map(t => (
+                {availableTables.map(t => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
