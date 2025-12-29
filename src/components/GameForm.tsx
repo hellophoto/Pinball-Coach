@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import type { GameType, PinballMapLocation, OPDBMachine } from '../types';
-import { addGame, getGames, getSettings, saveGames } from '../utils';
+import { addGame, getGames, getSettings, saveGames, updateGame, getGame } from '../utils';
 import { StrategyCard } from './StrategyCard';
 import { getPinballMapLocations } from '../services/pinballMapService';
 import { fetchPercentileWithTimeout } from '../services/pinScoresService';
 import { getOPDBMachines, searchMachinesByName, formatMachineDetails } from '../services/opdbService';
 import { TipModal } from './TipModal';
+import { PhotoCapture } from './PhotoCapture';
+import { ScoreSelectionModal } from './ScoreSelectionModal';
+import { extractScoresFromImage, preparePhotoForStorage } from '../services/ocrService';
 
 // Animation duration constant (matches CSS animation in index.css)
 const MACHINE_SELECT_ANIMATION_DURATION = 800; // milliseconds
 
 interface GameFormProps {
   onGameAdded: () => void;
+  editGameId?: string; // Optional: ID of game to edit
 }
 
-export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
+export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) => {
   const [venue, setVenue] = useState('');
   const [table, setTable] = useState('');
   const [myScore, setMyScore] = useState('');
@@ -41,11 +45,47 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [locationErrorMessage, setLocationErrorMessage] = useState<string | null>(null);
   const [showAvailableMachines, setShowAvailableMachines] = useState(true);
   const [animatingMachineId, setAnimatingMachineId] = useState<number | null>(null);
+  
+  // Photo capture states
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [photoThumbnail, setPhotoThumbnail] = useState<string | null>(null);
+  const [showScoreSelectionModal, setShowScoreSelectionModal] = useState(false);
+  const [extractedScores, setExtractedScores] = useState<number[]>([]);
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [enablePhotoStorage, setEnablePhotoStorage] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Get unique venues and tables from existing games
   const games = getGames();
   const existingVenues = Array.from(new Set(games.map(g => g.venue))).sort();
   const existingTables = Array.from(new Set(games.map(g => g.table))).sort();
+  
+  // Load existing game data if editing
+  useEffect(() => {
+    if (editGameId) {
+      const game = getGame(editGameId);
+      if (game) {
+        setIsEditMode(true);
+        setVenue(game.venue);
+        setTable(game.table);
+        setMyScore(game.myScore.toString());
+        setOpponentScore(game.opponentScore.toString());
+        setGameType(game.gameType);
+        setNotes(game.notes);
+        setSelectedOPDBId(game.opdb_id);
+        if (game.percentile !== undefined) {
+          setManualPercentile(game.percentile.toString());
+        }
+        if (game.photo) {
+          setCapturedPhoto(game.photo);
+        }
+        if (game.photoThumbnail) {
+          setPhotoThumbnail(game.photoThumbnail);
+        }
+      }
+    }
+  }, [editGameId]);
   
   // Include selected location machines in the table dropdown
   const availableTables = React.useMemo(() => {
@@ -205,6 +245,78 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     setOpdbSearchResults([]);
   };
 
+  // Photo capture handlers
+  const handlePhotoCapture = async (photoData: string) => {
+    setIsProcessingOCR(true);
+    setOcrProgress(0);
+
+    try {
+      // Extract scores from the image
+      const scores = await extractScoresFromImage(photoData, (progress) => {
+        setOcrProgress(progress);
+      });
+
+      // Store the captured photo
+      setCapturedPhoto(photoData);
+      setExtractedScores(scores);
+      
+      // Show the score selection modal
+      setShowScoreSelectionModal(true);
+    } catch (error) {
+      console.error('Error processing photo:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to extract scores from the photo: ${errorMessage}. Please try again with better lighting and a clear view of the scoreboard, or enter scores manually.`);
+      setCapturedPhoto(null);
+    } finally {
+      setIsProcessingOCR(false);
+      setOcrProgress(0);
+    }
+  };
+
+  const handleScoreSelection = async (selectedScore: number) => {
+    // Set the score in the form
+    setMyScore(selectedScore.toString());
+    
+    // Prepare photo for storage if enabled
+    if (enablePhotoStorage && capturedPhoto) {
+      try {
+        const { photo, thumbnail } = await preparePhotoForStorage(capturedPhoto);
+        setCapturedPhoto(photo);
+        setPhotoThumbnail(thumbnail);
+      } catch (error) {
+        console.error('Error preparing photo for storage:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        alert(`Failed to compress photo: ${errorMessage}. The photo will not be saved with this game.`);
+        // Continue without photo storage
+        setCapturedPhoto(null);
+        setPhotoThumbnail(null);
+      }
+    } else {
+      setCapturedPhoto(null);
+      setPhotoThumbnail(null);
+    }
+    
+    // Close the modal
+    setShowScoreSelectionModal(false);
+  };
+
+  const handleRetakePhoto = () => {
+    setCapturedPhoto(null);
+    setExtractedScores([]);
+    setShowScoreSelectionModal(false);
+  };
+
+  const handleCancelPhotoCapture = () => {
+    setCapturedPhoto(null);
+    setExtractedScores([]);
+    setShowScoreSelectionModal(false);
+  };
+
+  const handleRemovePhoto = () => {
+    setCapturedPhoto(null);
+    setPhotoThumbnail(null);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -229,8 +341,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     // Use manual percentile if provided
     const initialPercentile = validatePercentile(manualPercentile);
 
-    // Add game with manual percentile and opdb_id if provided
-    const newGame = addGame({
+    const gameData = {
       venue: finalVenue,
       table: finalTable,
       myScore: myScoreNum,
@@ -240,17 +351,33 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       notes,
       percentile: initialPercentile,
       opdb_id: selectedOPDBId,
-    });
+      photo: enablePhotoStorage ? capturedPhoto || undefined : undefined,
+      photoThumbnail: enablePhotoStorage ? photoThumbnail || undefined : undefined,
+    };
 
-    // Only fetch percentile automatically if not manually provided
-    if (initialPercentile === undefined) {
+    let savedGame;
+    
+    if (isEditMode && editGameId) {
+      // Update existing game
+      savedGame = updateGame(editGameId, gameData);
+      if (!savedGame) {
+        alert('Failed to update game');
+        return;
+      }
+    } else {
+      // Add new game
+      savedGame = addGame(gameData);
+    }
+
+    // Only fetch percentile automatically if not manually provided and not editing
+    if (initialPercentile === undefined && !isEditMode) {
       setIsFetchingPercentile(true);
       fetchPercentileWithTimeout(finalTable, myScoreNum)
         .then(percentile => {
           if (percentile !== null) {
             // Update the game with percentile using the existing utility
             const allGames = getGames();
-            const gameIndex = allGames.findIndex(g => g.id === newGame.id);
+            const gameIndex = allGames.findIndex(g => g.id === savedGame.id);
             if (gameIndex !== -1) {
               allGames[gameIndex].percentile = percentile;
               saveGames(allGames);
@@ -280,11 +407,19 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     setShowPinscoresLink(false);
     setSelectedOPDBId(undefined);
     setOpdbSearchResults([]);
+    setCapturedPhoto(null);
+    setPhotoThumbnail(null);
+    setIsEditMode(false);
     
-    // Show tip modal with the table that was just played
-    setTipModalTable(finalTable);
-    setShowAllTips(false);
-    setShowTipModal(true);
+    // Show tip modal with the table that was just played (only for new games)
+    if (!editGameId) {
+      setTipModalTable(finalTable);
+      setShowAllTips(false);
+      setShowTipModal(true);
+    } else {
+      // If editing, just go back to previous view
+      onGameAdded();
+    }
   };
 
   return (
@@ -293,7 +428,36 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       <h2 className="text-2xl font-bold mb-6" style={{ 
         color: 'var(--neon-cyan)',
         textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
-      }}>Add New Game</h2>
+      }}>{isEditMode ? 'Edit Game' : 'Add New Game'}</h2>
+      
+      {/* OCR Processing Indicator */}
+      {isProcessingOCR && (
+        <div className="mb-4 rounded p-4 border-2" style={{
+          background: 'rgba(0, 255, 255, 0.1)',
+          borderColor: 'var(--neon-cyan)',
+          boxShadow: '0 0 10px var(--neon-cyan)'
+        }}>
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-2xl">🔍</span>
+            <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>
+              Processing Photo...
+            </span>
+          </div>
+          <div className="w-full bg-gray-800 rounded-full h-3 overflow-hidden border border-cyan-500">
+            <div 
+              className="h-full transition-all duration-300"
+              style={{ 
+                width: `${ocrProgress}%`,
+                background: 'linear-gradient(90deg, var(--neon-cyan), var(--neon-purple))',
+                boxShadow: '0 0 10px var(--neon-cyan)'
+              }}
+            />
+          </div>
+          <p className="text-xs mt-2" style={{ color: 'var(--neon-purple)' }}>
+            {ocrProgress}% - Extracting scores from image...
+          </p>
+        </div>
+      )}
       
       {isFetchingPercentile && (
         <div className="mb-4 rounded p-3 border-2" style={{
@@ -329,6 +493,72 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
       )}
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Photo Capture Section */}
+        {!isEditMode && (
+          <div>
+            <PhotoCapture 
+              onPhotoCapture={handlePhotoCapture}
+              disabled={isProcessingOCR}
+            />
+            
+            {/* Photo Storage Toggle */}
+            <div className="mt-3 flex items-center justify-between">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enablePhotoStorage}
+                  onChange={(e) => setEnablePhotoStorage(e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-sm" style={{ color: 'var(--neon-purple)' }}>
+                  Save photo with game (recommended)
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+        
+        {/* Photo Thumbnail Display */}
+        {(photoThumbnail || capturedPhoto) && (
+          <div className="rounded-lg p-4 border-2" style={{
+            background: 'rgba(0, 255, 255, 0.05)',
+            borderColor: 'var(--neon-cyan)',
+            boxShadow: '0 0 10px var(--neon-cyan)'
+          }}>
+            <div className="flex items-start gap-3">
+              <img 
+                src={photoThumbnail || capturedPhoto || ''}
+                alt="Scoreboard" 
+                className="w-24 h-24 object-cover rounded border-2"
+                style={{
+                  borderColor: 'var(--neon-purple)',
+                  boxShadow: '0 0 10px var(--neon-purple)'
+                }}
+              />
+              <div className="flex-1">
+                <div className="text-sm font-semibold mb-1" style={{ color: 'var(--neon-cyan)' }}>
+                  📸 Photo Attached
+                </div>
+                <p className="text-xs mb-2" style={{ color: 'var(--neon-purple)' }}>
+                  Your scoreboard photo will be saved with this game
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  className="text-xs px-3 py-1 rounded border transition"
+                  style={{
+                    borderColor: '#ff0066',
+                    color: '#ff0066',
+                    background: 'rgba(255, 0, 102, 0.1)'
+                  }}
+                >
+                  Remove Photo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Venue */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -750,6 +980,17 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
           }
         }}
         showAllTips={showAllTips}
+      />
+    )}
+    
+    {/* Score Selection Modal */}
+    {showScoreSelectionModal && capturedPhoto && (
+      <ScoreSelectionModal
+        extractedScores={extractedScores}
+        onSelectScore={handleScoreSelection}
+        onCancel={handleCancelPhotoCapture}
+        onRetake={handleRetakePhoto}
+        photoPreview={capturedPhoto}
       />
     )}
     </div>

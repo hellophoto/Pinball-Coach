@@ -52,6 +52,29 @@ export const addGame = (game: Omit<Game, 'id' | 'timestamp'>): Game => {
   return newGame;
 };
 
+export const updateGame = (id: string, updates: Partial<Omit<Game, 'id' | 'timestamp'>>): Game | null => {
+  const games = getGames();
+  const gameIndex = games.findIndex(game => game.id === id);
+  
+  if (gameIndex === -1) {
+    return null;
+  }
+  
+  const updatedGame = {
+    ...games[gameIndex],
+    ...updates
+  };
+  
+  games[gameIndex] = updatedGame;
+  saveGames(games);
+  return updatedGame;
+};
+
+export const getGame = (id: string): Game | undefined => {
+  const games = getGames();
+  return games.find(game => game.id === id);
+};
+
 export const deleteGame = (id: string): void => {
   const games = getGames();
   const filteredGames = games.filter(game => game.id !== id);
