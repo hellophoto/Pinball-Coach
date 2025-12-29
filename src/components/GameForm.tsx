@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import type { GameType, PinballMapLocation } from '../types';
+import type { GameType, PinballMapLocation, OPDBMachine } from '../types';
 import { addGame, getGames, getSettings, saveGames } from '../utils';
 import { StrategyCard } from './StrategyCard';
 import { getPinballMapLocations } from '../services/pinballMapService';
 import { fetchPercentileWithTimeout } from '../services/pinScoresService';
+import { getOPDBMachines, searchMachinesByName, formatMachineDetails } from '../services/opdbService';
 import { TipModal } from './TipModal';
 
 interface GameFormProps {
@@ -30,6 +31,9 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
   const [showAllTips, setShowAllTips] = useState(false);
   const [manualPercentile, setManualPercentile] = useState('');
   const [showPinscoresLink, setShowPinscoresLink] = useState(false);
+  const [opdbMachines, setOpdbMachines] = useState<OPDBMachine[]>([]);
+  const [opdbLoading, setOpdbLoading] = useState(false);
+  const [opdbSearchResults, setOpdbSearchResults] = useState<OPDBMachine[]>([]);
 
   // Get unique venues and tables from existing games
   const games = getGames();
@@ -59,6 +63,24 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     loadPinballMapData();
   }, []);
 
+  // Load OPDB data on mount
+  useEffect(() => {
+    const loadOPDBData = async () => {
+      setOpdbLoading(true);
+      try {
+        const machines = await getOPDBMachines();
+        setOpdbMachines(machines);
+      } catch (error) {
+        console.error('Error loading OPDB data:', error);
+        // Fail silently - app still works without OPDB data
+      } finally {
+        setOpdbLoading(false);
+      }
+    };
+
+    loadOPDBData();
+  }, []);
+
   // Update selected location when venue changes
   useEffect(() => {
     if (!showCustomVenue && venue) {
@@ -83,6 +105,26 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
     const num = parseFloat(value);
     if (isNaN(num)) return undefined;
     return Math.max(0, Math.min(100, num));
+  };
+
+  // Handle table search for OPDB
+  const handleTableSearch = (searchTerm: string) => {
+    setCustomTable(searchTerm);
+    
+    // Only search if we have at least 2 characters
+    if (searchTerm.length >= 2 && opdbMachines.length > 0) {
+      const results = searchMachinesByName(opdbMachines, searchTerm);
+      // Limit to 10 results
+      setOpdbSearchResults(results.slice(0, 10));
+    } else {
+      setOpdbSearchResults([]);
+    }
+  };
+
+  // Handle selecting a machine from OPDB search results
+  const handleSelectOPDBMachine = (machine: OPDBMachine) => {
+    setCustomTable(machine.name);
+    setOpdbSearchResults([]);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -274,7 +316,12 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
 
         {/* Table */}
         <div>
-          <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Table</label>
+          <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>
+            Table
+            {opdbLoading && <span className="ml-2 text-sm" style={{ color: 'var(--neon-purple)' }}>
+              (Loading OPDB data...)
+            </span>}
+          </label>
           {!showCustomTable ? (
             <div className="flex gap-2">
               <select
@@ -296,21 +343,76 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded }) => {
               </button>
             </div>
           ) : (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={customTable}
-                onChange={(e) => setCustomTable(e.target.value)}
-                placeholder="Enter new table..."
-                className="flex-1 input-synthwave rounded px-4 py-2"
-              />
-              <button
-                type="button"
-                onClick={() => setShowCustomTable(false)}
-                className="px-4 py-2 button-secondary rounded"
-              >
-                Cancel
-              </button>
+            <div className="relative">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={customTable}
+                  onChange={(e) => handleTableSearch(e.target.value)}
+                  placeholder="Enter new table or search OPDB..."
+                  className="flex-1 input-synthwave rounded px-4 py-2"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCustomTable(false);
+                    setOpdbSearchResults([]);
+                  }}
+                  className="px-4 py-2 button-secondary rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+              
+              {/* OPDB Search Results Dropdown */}
+              {opdbSearchResults.length > 0 && (
+                <div 
+                  className="absolute z-10 w-full mt-2 rounded-lg overflow-hidden"
+                  style={{
+                    background: 'rgba(16, 0, 32, 0.95)',
+                    border: '2px solid var(--neon-cyan)',
+                    boxShadow: '0 0 20px var(--neon-cyan)',
+                    maxHeight: '400px',
+                    overflowY: 'auto'
+                  }}
+                >
+                  {opdbSearchResults.map((machine) => (
+                    <button
+                      key={machine.opdb_id}
+                      type="button"
+                      onClick={() => handleSelectOPDBMachine(machine)}
+                      className="w-full text-left px-4 py-3 transition-all border-b"
+                      style={{
+                        borderColor: 'rgba(139, 0, 255, 0.3)',
+                        background: 'transparent'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 255, 255, 0.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <div style={{ 
+                        color: 'var(--neon-cyan)',
+                        fontWeight: 'bold',
+                        marginBottom: '4px'
+                      }}>
+                        {machine.name}
+                      </div>
+                      {formatMachineDetails(machine) && (
+                        <div style={{ 
+                          color: 'var(--neon-purple)',
+                          fontSize: '0.875rem',
+                          opacity: 0.9
+                        }}>
+                          {formatMachineDetails(machine)}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

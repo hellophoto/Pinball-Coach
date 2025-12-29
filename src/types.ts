@@ -13,6 +13,7 @@ export interface Game {
   timestamp: number;
   source?: 'manual' | 'ifpa';
   percentile?: number; // 0-100, from PinScores API
+  opdb_id?: string;
 }
 
 export interface TableStrategy {
@@ -46,6 +47,31 @@ export interface Settings {
     state?: string;
     zipCode?: string;
     radius: number; // miles
+    opdbLastUpdated?: number;
   };
   pinballMapLastUpdated?: number;
+}
+
+// OPDB types
+export interface OPDBMachine {
+  opdb_id: string;
+  name: string;
+  short_name?: string;
+  manufacturer?: string;
+  year?: number;
+  type?: string;
+  theme?: string[];
+  designer?: string[];
+  artist?: string[];
+  ipdb_id?: number;
+  machine_group_id?: string;
+  production_count?: number;
+  model_number?: string;
+  common_names?: string[];
+  description?: string;
+  features?: string[];
+  notes?: string[];
+  toys?: string[];
+  rule_complexity?: number;
+  gameplay_complexity?: number;
 }

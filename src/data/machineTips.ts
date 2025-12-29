@@ -1,6 +1,8 @@
 // Machine Tips Data Structure
 // Tips and rule sheets for popular competitive pinball machines
 
+import type { OPDBMachine } from '../types';
+
 export interface MachineTip {
   tips: string[];
   ruleSheetUrl: string;
@@ -160,4 +162,57 @@ export const getRandomTip = (tableName: string): string => {
 // Get all table names that have tips
 export const getAvailableTables = (): string[] => {
   return Object.keys(machineTips).sort();
+};
+
+/**
+ * Get tips for a table with OPDB integration
+ * @param tableNameOrId - Table name or OPDB ID
+ * @param opdbMachines - Optional OPDB machines array for enhanced matching
+ */
+export const getTipsForTableWithOPDB = (
+  tableNameOrId: string,
+  opdbMachines?: OPDBMachine[]
+): MachineTip | null => {
+  // First try direct match with existing tips
+  const directMatch = getTipsForTable(tableNameOrId);
+  if (directMatch) {
+    return directMatch;
+  }
+  
+  // If no match and OPDB machines provided, try OPDB-based matching
+  if (opdbMachines && opdbMachines.length > 0) {
+    // Search by opdb_id
+    const machineById = opdbMachines.find(m => m.opdb_id === tableNameOrId);
+    if (machineById) {
+      // Try matching the machine's name or short_name with tips
+      const tipsByName = getTipsForTable(machineById.name);
+      if (tipsByName) return tipsByName;
+      
+      if (machineById.short_name) {
+        const tipsByShortName = getTipsForTable(machineById.short_name);
+        if (tipsByShortName) return tipsByShortName;
+      }
+    }
+    
+    // Search by common names
+    const lowerTerm = tableNameOrId.toLowerCase();
+    for (const machine of opdbMachines) {
+      if (machine.common_names && machine.common_names.length > 0) {
+        for (const commonName of machine.common_names) {
+          if (commonName.toLowerCase() === lowerTerm) {
+            // Try matching with the machine's official name
+            const tipsByName = getTipsForTable(machine.name);
+            if (tipsByName) return tipsByName;
+            
+            if (machine.short_name) {
+              const tipsByShortName = getTipsForTable(machine.short_name);
+              if (tipsByShortName) return tipsByShortName;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return null;
 };
