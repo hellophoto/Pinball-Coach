@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="public/pinball-coach-logo.jpg" alt="Pinball Coach Logo" width="400"/>
+</div>
+
 # Pinball Coach
 
 A lightweight mobile-first web application to help track personal pinball stats and strategies with a retro synthwave aesthetic.
