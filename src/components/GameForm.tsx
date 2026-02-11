@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { GameType, PinballMapLocation, OPDBMachine } from '../types';
-import { addGame, getGames, getSettings, saveGames, updateGame, getGame } from '../utils';
+import { addGame, getGames, getSettings, updateGame, getGame, updateGamePercentile } from '../supabaseUtils';
 import { StrategyCard } from './StrategyCard';
 import { getPinballMapLocations } from '../services/pinballMapService';
 import { fetchPercentileWithTimeout } from '../services/pinScoresService';
@@ -56,15 +56,21 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
   const [enablePhotoStorage, setEnablePhotoStorage] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // Get unique venues and tables from existing games
-  const games = getGames();
-  const existingVenues = Array.from(new Set(games.map(g => g.venue))).sort();
-  const existingTables = Array.from(new Set(games.map(g => g.table))).sort();
+// Get unique venues and tables from existing games
+const [existingVenues, setExistingVenues] = useState<string[]>([]);
+const [existingTables, setExistingTables] = useState<string[]>([]);
+
+useEffect(() => {
+  getGames().then(games => {
+    setExistingVenues(Array.from(new Set(games.map(g => g.venue))).sort());
+    setExistingTables(Array.from(new Set(games.map(g => g.table))).sort());
+  });
+}, []);
   
-  // Load existing game data if editing
-  useEffect(() => {
-    if (editGameId) {
-      const game = getGame(editGameId);
+// Load existing game data if editing
+useEffect(() => {
+  if (editGameId) {
+    getGame(editGameId).then(game => {
       if (game) {
         setIsEditMode(true);
         setVenue(game.venue);
@@ -84,8 +90,9 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
           setPhotoThumbnail(game.photoThumbnail);
         }
       }
-    }
-  }, [editGameId]);
+    });
+  }
+}, [editGameId]);
   
   // Include selected location machines in the table dropdown
   const availableTables = React.useMemo(() => {
@@ -100,7 +107,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
       setIsLoadingLocations(true);
       setLocationErrorMessage(null);
       try {
-        const settings = getSettings();
+        const settings = await getSettings();
         const result = await getPinballMapLocations(
           settings.location.city,
           settings.location.state,
@@ -192,7 +199,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
     setIsLoadingLocations(true);
     setLocationErrorMessage(null);
     try {
-      const settings = getSettings();
+      const settings = await getSettings();
       const result = await getPinballMapLocations(
         settings.location.city,
         settings.location.state,
@@ -317,7 +324,7 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
     setPhotoThumbnail(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const finalVenue = showCustomVenue ? customVenue : venue;
@@ -356,32 +363,24 @@ export const GameForm: React.FC<GameFormProps> = ({ onGameAdded, editGameId }) =
     };
 
     let savedGame;
-    
+
     if (isEditMode && editGameId) {
-      // Update existing game
-      savedGame = updateGame(editGameId, gameData);
+      savedGame = await updateGame(editGameId, gameData);
       if (!savedGame) {
         alert('Failed to update game');
         return;
       }
     } else {
-      // Add new game
-      savedGame = addGame(gameData);
+      savedGame = await addGame(gameData);
     }
 
     // Only fetch percentile automatically if not manually provided and not editing
     if (initialPercentile === undefined && !isEditMode) {
       setIsFetchingPercentile(true);
       fetchPercentileWithTimeout(finalTable, myScoreNum)
-        .then(percentile => {
+        .then(async percentile => {
           if (percentile !== null) {
-            // Update the game with percentile using the existing utility
-            const allGames = getGames();
-            const gameIndex = allGames.findIndex(g => g.id === savedGame.id);
-            if (gameIndex !== -1) {
-              allGames[gameIndex].percentile = percentile;
-              saveGames(allGames);
-            }
+            await updateGamePercentile(savedGame.id, percentile);
           }
         })
         .catch(error => {
