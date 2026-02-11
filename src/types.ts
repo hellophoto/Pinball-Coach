@@ -13,6 +13,9 @@ export interface Game {
   timestamp: number;
   source?: 'manual' | 'ifpa';
   percentile?: number; // 0-100, from PinScores API
+  opdb_id?: string;
+  photo?: string; // base64 encoded photo of scoreboard
+  photoThumbnail?: string; // compressed thumbnail for display
 }
 
 export interface TableStrategy {
@@ -37,6 +40,9 @@ export interface PinballMapLocation {
   state: string;
   zip: string;
   machines: PinballMapMachine[];
+  lat?: number; // NEW - for distance calculation
+  lon?: number; // NEW - for distance calculation
+  distance?: number; // NEW - calculated distance from user
 }
 
 // Settings types
@@ -46,6 +52,35 @@ export interface Settings {
     state?: string;
     zipCode?: string;
     radius: number; // miles
+    opdbLastUpdated?: number;
+    useGeolocation?: boolean; // NEW
+    lastKnownLat?: number; // NEW
+    lastKnownLon?: number; // NEW
+    region?: string; // NEW (e.g., "portland", "seattle")
   };
   pinballMapLastUpdated?: number;
+}
+
+// OPDB types
+export interface OPDBMachine {
+  opdb_id: string;
+  name: string;
+  short_name?: string;
+  manufacturer?: string;
+  year?: number;
+  type?: string;
+  theme?: string[];
+  designer?: string[];
+  artist?: string[];
+  ipdb_id?: number;
+  machine_group_id?: string;
+  production_count?: number;
+  model_number?: string;
+  common_names?: string[];
+  description?: string;
+  features?: string[];
+  notes?: string[];
+  toys?: string[];
+  rule_complexity?: number;
+  gameplay_complexity?: number;
 }

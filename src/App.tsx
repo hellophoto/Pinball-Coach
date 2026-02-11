@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 import Auth from './Auth';
@@ -6,6 +6,7 @@ import { GameForm } from './components/GameForm';
 import { Dashboard } from './components/Dashboard';
 import { GameHistory } from './components/GameHistory';
 import { Settings } from './components/Settings';
+import { initializeOPDBSync } from './utils/opdbSync';
 import './App.css';
 
 type View = 'form' | 'dashboard' | 'history' | 'settings';
@@ -33,6 +34,7 @@ function App() {
 
   const handleGameAdded = () => {
     setRefreshKey(prev => prev + 1);
+    setEditGameId(undefined);
     setView('dashboard');
   };
 
@@ -66,7 +68,7 @@ function App() {
   return (
     <div className="min-h-screen" style={{ position: 'relative', zIndex: 1 }}>
       {/* Header */}
-      <header className="sticky top-0 z-10 glass-effect" style={{ 
+      <header className="sticky top-0 z-10 glass-effect max-h-20" style={{ 
         borderBottom: '2px solid var(--neon-purple)',
         boxShadow: '0 0 20px var(--neon-purple)'
       }}>
@@ -86,9 +88,12 @@ function App() {
             </div>
           </div>
           {/* Navigation */}
-          <nav className="flex flex-col sm:flex-row gap-2">
+          <nav className="flex flex-col sm:flex-row gap-2 mt-3">
             <button
-              onClick={() => setView('dashboard')}
+              onClick={() => {
+                setView('dashboard');
+                setEditGameId(undefined);
+              }}
               className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'dashboard' ? 'nav-button-active' : ''
               }`}
@@ -96,7 +101,10 @@ function App() {
               Dashboard
             </button>
             <button
-              onClick={() => setView('form')}
+              onClick={() => {
+                setView('form');
+                setEditGameId(undefined);
+              }}
               className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'form' ? 'nav-button-active' : ''
               }`}
@@ -104,7 +112,10 @@ function App() {
               Add Game
             </button>
             <button
-              onClick={() => setView('history')}
+              onClick={() => {
+                setView('history');
+                setEditGameId(undefined);
+              }}
               className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'history' ? 'nav-button-active' : ''
               }`}
@@ -112,7 +123,10 @@ function App() {
               History
             </button>
             <button
-              onClick={() => setView('settings')}
+              onClick={() => {
+                setView('settings');
+                setEditGameId(undefined);
+              }}
               className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
                 view === 'settings' ? 'nav-button-active' : ''
               }`}
@@ -130,10 +144,10 @@ function App() {
             <Dashboard onSyncComplete={handleIFPASync} />
           </div>
         )}
-        {view === 'form' && <GameForm onGameAdded={handleGameAdded} />}
+        {view === 'form' && <GameForm onGameAdded={handleGameAdded} editGameId={editGameId} />}
         {view === 'history' && (
           <div key={refreshKey}>
-            <GameHistory onGameDeleted={handleGameDeleted} />
+            <GameHistory onGameDeleted={handleGameDeleted} onEditGame={handleEditGame} />
           </div>
         )}
         {view === 'settings' && <Settings />}

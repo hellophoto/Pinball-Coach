@@ -138,6 +138,37 @@ body::after {
   transform: translateY(-2px);
 }
 
+/* Machine selection glow animation */
+@keyframes machineSelectGlow {
+  0% {
+    box-shadow: 0 0 10px var(--neon-cyan);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 
+      0 0 20px var(--neon-cyan),
+      0 0 40px var(--neon-cyan),
+      0 0 60px var(--neon-cyan),
+      inset 0 0 20px rgba(0, 255, 255, 0.4);
+    filter: brightness(1.3);
+  }
+  100% {
+    box-shadow: 0 0 10px var(--neon-cyan);
+    filter: brightness(1);
+  }
+}
+
+.machine-select-glow {
+  animation: machineSelectGlow 0.8s ease-out;
+}
+
+/* Machine button hover effect */
+.machine-button-hover:hover {
+  filter: brightness(1.2);
+  transform: scale(1.02);
+  box-shadow: 0 0 15px var(--neon-cyan) !important;
+}
+
 /* Glassmorphism effect */
 .glass-effect {
   background: rgba(21, 0, 37, 0.6);
