@@ -18,13 +18,11 @@ function App() {
   const [editGameId, setEditGameId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
 
-    // Listen for auth changes (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
@@ -55,25 +53,23 @@ function App() {
     await supabase.auth.signOut();
   };
 
-  // Show nothing while checking auth state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <p className="text-cyan-400 font-mono tracking-widest animate-pulse">LOADING...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="font-mono tracking-widest animate-pulse" style={{ color: 'var(--neon-cyan)' }}>
+          LOADING...
+        </p>
       </div>
     );
   }
 
-  // Show login/signup if not authenticated
   if (!session) {
     return <Auth />;
   }
 
-  // Show the app if authenticated
   return (
     <div className="min-h-screen" style={{ position: 'relative', zIndex: 1 }}>
-      {/* Header */}
-      <header className="sticky top-0 z-10 glass-effect max-h-20" style={{ 
+      <header className="sticky top-0 z-10 glass-effect" style={{ 
         borderBottom: '2px solid var(--neon-purple)',
         boxShadow: '0 0 20px var(--neon-purple)'
       }}>
@@ -92,5 +88,61 @@ function App() {
               </button>
             </div>
           </div>
-          {/* Navigation */}
-          <nav className="flex flex-col sm:flex-row ga
+          <nav className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => { setView('dashboard'); setEditGameId(undefined); }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'dashboard' ? 'nav-button-active' : ''
+              }`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => { setView('form'); setEditGameId(undefined); }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'form' ? 'nav-button-active' : ''
+              }`}
+            >
+              Add Game
+            </button>
+            <button
+              onClick={() => { setView('history'); setEditGameId(undefined); }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'history' ? 'nav-button-active' : ''
+              }`}
+            >
+              History
+            </button>
+            <button
+              onClick={() => { setView('settings'); setEditGameId(undefined); }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'settings' ? 'nav-button-active' : ''
+              }`}
+            >
+              Settings
+            </button>
+          </nav>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {view === 'dashboard' && (
+          <div key={refreshKey}>
+            <Dashboard onSyncComplete={handleIFPASync} />
+          </div>
+        )}
+        {view === 'form' && (
+          <GameForm onGameAdded={handleGameAdded} editGameId={editGameId} />
+        )}
+        {view === 'history' && (
+          <div key={refreshKey}>
+            <GameHistory onGameDeleted={handleGameDeleted} onEditGame={handleEditGame} />
+          </div>
+        )}
+        {view === 'settings' && <Settings />}
+      </main>
+    </div>
+  );
+}
+
+export default App;
