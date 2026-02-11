@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
+import type { Session } from '@supabase/supabase-js';
+import Auth from './Auth';
 import { GameForm } from './components/GameForm';
 import { Dashboard } from './components/Dashboard';
 import { GameHistory } from './components/GameHistory';
@@ -8,8 +11,25 @@ import './App.css';
 type View = 'form' | 'dashboard' | 'history' | 'settings';
 
 function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<View>('dashboard');
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // Listen for auth changes (login, logout, token refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleGameAdded = () => {
     setRefreshKey(prev => prev + 1);
@@ -24,6 +44,25 @@ function App() {
     setRefreshKey(prev => prev + 1);
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // Show nothing while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <p className="text-cyan-400 font-mono tracking-widest animate-pulse">LOADING...</p>
+      </div>
+    );
+  }
+
+  // Show login/signup if not authenticated
+  if (!session) {
+    return <Auth />;
+  }
+
+  // Show the app if authenticated
   return (
     <div className="min-h-screen" style={{ position: 'relative', zIndex: 1 }}>
       {/* Header */}
@@ -32,7 +71,20 @@ function App() {
         boxShadow: '0 0 20px var(--neon-purple)'
       }}>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-4 app-title text-center">🎯 Pinball Coach</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold app-title">🎯 Pinball Coach</h1>
+            <div className="flex items-center gap-3">
+              <span className="text-purple-400 font-mono text-xs hidden sm:block">
+                {session.user.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="text-xs font-mono py-1 px-3 rounded border border-purple-800 text-purple-400 hover:border-purple-400 hover:text-purple-300 transition-colors"
+              >
+                LOGOUT
+              </button>
+            </div>
+          </div>
           {/* Navigation */}
           <nav className="flex flex-col sm:flex-row gap-2">
             <button
@@ -91,4 +143,3 @@ function App() {
 }
 
 export default App;
-
