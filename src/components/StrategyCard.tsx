@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { getTableStrategy } from '../utils';
+import React, { useState, useEffect } from 'react';
+import type { TableStrategy } from '../types';
+import { getTableStrategy } from '../supabaseUtils';
 
 interface StrategyCardProps {
   tableName: string;
@@ -7,7 +8,11 @@ interface StrategyCardProps {
 
 export const StrategyCard: React.FC<StrategyCardProps> = ({ tableName }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const strategy = getTableStrategy(tableName);
+  const [strategy, setStrategy] = useState<TableStrategy | undefined>(undefined);
+
+  useEffect(() => {
+    getTableStrategy(tableName).then(setStrategy);
+  }, [tableName]);
 
   if (!strategy) {
     return null;
