@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import type { TableStrategy, Settings as SettingsType } from '../types';
-import { getTableStrategies, saveTableStrategy, deleteTableStrategy, getSettings, saveSettings } from '../utils';
+import { getTableStrategies, saveTableStrategy, deleteTableStrategy, getSettings, saveSettings } from '../supabaseUtils';
 import { clearPinballMapCache, getPinballMapCacheTimestamp, getPinballMapLocations, getCurrentLocation, getRegionFromState } from '../services/pinballMapService';
 
 export const Settings: React.FC = () => {
-  const [strategies, setStrategies] = useState<Record<string, TableStrategy>>(getTableStrategies());
+  const [strategies, setStrategies] = useState<Record<string, TableStrategy>>({});
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<TableStrategy>({
     table: '',
@@ -15,29 +15,33 @@ export const Settings: React.FC = () => {
   });
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Location settings
-  const [settings, setSettingsState] = useState<SettingsType>(getSettings());
+  const [settings, setSettingsState] = useState<SettingsType>({
+    location: { city: 'Portland', state: 'OR', radius: 25 }
+  });
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [locationMessage, setLocationMessage] = useState<string | null>(null);
   const [cacheTimestamp, setCacheTimestamp] = useState<number | null>(getPinballMapCacheTimestamp());
   const [venueCount, setVenueCount] = useState<number | null>(null);
 
-  // Update cache timestamp when component mounts
   useEffect(() => {
+    Promise.all([
+      getTableStrategies(),
+      getSettings(),
+    ]).then(([strats, setts]) => {
+      setStrategies(strats);
+      setSettingsState(setts);
+      setLoading(false);
+    });
     setCacheTimestamp(getPinballMapCacheTimestamp());
   }, []);
 
   const handleNewStrategy = () => {
     setIsEditing('new');
-    setEditForm({
-      table: '',
-      skillShot: '',
-      modes: '',
-      multiballs: '',
-      tips: '',
-    });
+    setEditForm({ table: '', skillShot: '', modes: '', multiballs: '', tips: '' });
   };
 
   const handleEditStrategy = (tableName: string) => {
@@ -48,51 +52,37 @@ export const Settings: React.FC = () => {
     }
   };
 
-  const handleSaveStrategy = () => {
+  const handleSaveStrategy = async () => {
     if (!editForm.table.trim()) {
       setErrorMessage('Table name is required');
       return;
     }
-
-    saveTableStrategy(editForm);
-    setStrategies(getTableStrategies());
+    await saveTableStrategy(editForm);
+    const updated = await getTableStrategies();
+    setStrategies(updated);
     setIsEditing(null);
     setErrorMessage(null);
-    setEditForm({
-      table: '',
-      skillShot: '',
-      modes: '',
-      multiballs: '',
-      tips: '',
-    });
+    setEditForm({ table: '', skillShot: '', modes: '', multiballs: '', tips: '' });
   };
 
-  const handleDeleteStrategy = (tableName: string) => {
-    deleteTableStrategy(tableName);
-    setStrategies(getTableStrategies());
+  const handleDeleteStrategy = async (tableName: string) => {
+    await deleteTableStrategy(tableName);
+    const updated = await getTableStrategies();
+    setStrategies(updated);
     setConfirmDelete(null);
   };
 
   const handleCancel = () => {
     setIsEditing(null);
     setErrorMessage(null);
-    setEditForm({
-      table: '',
-      skillShot: '',
-      modes: '',
-      multiballs: '',
-      tips: '',
-    });
+    setEditForm({ table: '', skillShot: '', modes: '', multiballs: '', tips: '' });
   };
 
   const handleUseCurrentLocation = async () => {
     setIsFetchingLocation(true);
     setLocationMessage(null);
-    
     try {
       const coords = await getCurrentLocation();
-      
-      // Update settings with coordinates
       const updatedSettings: SettingsType = {
         ...settings,
         location: {
@@ -103,9 +93,8 @@ export const Settings: React.FC = () => {
         },
         pinballMapLastUpdated: Date.now(),
       };
-      saveSettings(updatedSettings);
+      await saveSettings(updatedSettings);
       setSettingsState(updatedSettings);
-      
       setLocationMessage(`✅ Location found: ${coords.lat.toFixed(4)}, ${coords.lon.toFixed(4)}`);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -118,22 +107,19 @@ export const Settings: React.FC = () => {
   const handleUpdateLocation = async () => {
     setIsUpdatingLocation(true);
     setLocationMessage(null);
-    
     try {
-      // Save settings first
       const updatedSettings: SettingsType = {
         ...settings,
         pinballMapLastUpdated: Date.now(),
       };
-      saveSettings(updatedSettings);
+      await saveSettings(updatedSettings);
       setSettingsState(updatedSettings);
       
-      // Force refresh Pinball Map data with new cascading strategy
       const result = await getPinballMapLocations(
         settings.location.city,
         settings.location.state,
         settings.location.radius,
-        true, // force refresh
+        true,
         settings.location.useGeolocation,
         settings.location.lastKnownLat,
         settings.location.lastKnownLon
@@ -151,11 +137,7 @@ export const Settings: React.FC = () => {
       } else if (result.searchType === 'city') {
         message += ` in ${settings.location.city}`;
       }
-      
-      if (result.errorMessage) {
-        message += `. Note: ${result.errorMessage}`;
-      }
-      
+      if (result.errorMessage) message += `. Note: ${result.errorMessage}`;
       setLocationMessage(message);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -168,7 +150,6 @@ export const Settings: React.FC = () => {
   const handleTestLocation = async () => {
     setIsUpdatingLocation(true);
     setLocationMessage(null);
-    
     try {
       const result = await getPinballMapLocations(
         settings.location.city,
@@ -179,22 +160,12 @@ export const Settings: React.FC = () => {
         settings.location.lastKnownLat,
         settings.location.lastKnownLon
       );
-      
       setVenueCount(result.locations.length);
-      
       let message = `🧪 Test Results: Found ${result.locations.length} venue${result.locations.length !== 1 ? 's' : ''}`;
-      if (result.searchType === 'geolocation') {
-        message += ` using geolocation`;
-      } else if (result.searchType === 'region') {
-        message += ` using region search`;
-      } else if (result.searchType === 'city') {
-        message += ` using city search`;
-      }
-      
-      if (result.errorMessage) {
-        message += `. ${result.errorMessage}`;
-      }
-      
+      if (result.searchType === 'geolocation') message += ` using geolocation`;
+      else if (result.searchType === 'region') message += ` using region search`;
+      else if (result.searchType === 'city') message += ` using city search`;
+      if (result.errorMessage) message += `. ${result.errorMessage}`;
       setLocationMessage(message);
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -212,15 +183,21 @@ export const Settings: React.FC = () => {
 
   const formatLastUpdated = (timestamp: number | null) => {
     if (!timestamp) return 'Never';
-    const date = new Date(timestamp);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(timestamp).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
     });
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="font-mono animate-pulse" style={{ color: 'var(--neon-cyan)' }}>
+          LOADING SETTINGS...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -232,17 +209,11 @@ export const Settings: React.FC = () => {
         }}>Pinball Map Settings</h2>
         
         {locationMessage && (
-          <div className={`mb-4 rounded-lg p-4 border-2 ${
-            locationMessage.includes('Error')
-              ? ''
-              : ''
-          }`} style={{
+          <div className="mb-4 rounded-lg p-4 border-2" style={{
             background: locationMessage.includes('Error') 
               ? 'rgba(255, 0, 102, 0.2)' 
               : 'rgba(0, 255, 136, 0.2)',
-            borderColor: locationMessage.includes('Error') 
-              ? '#ff0066' 
-              : '#00ff88',
+            borderColor: locationMessage.includes('Error') ? '#ff0066' : '#00ff88',
             boxShadow: locationMessage.includes('Error')
               ? '0 0 10px rgba(255, 0, 102, 0.5)'
               : '0 0 10px rgba(0, 255, 136, 0.5)'
@@ -260,7 +231,6 @@ export const Settings: React.FC = () => {
           }}>Location Configuration</h3>
           
           <div className="space-y-4">
-            {/* Geolocation Toggle */}
             <div className="rounded p-4 border-2" style={{
               background: 'rgba(0, 255, 255, 0.05)',
               borderColor: 'var(--neon-cyan)',
@@ -286,16 +256,13 @@ export const Settings: React.FC = () => {
                 />
               </label>
               
-              {/* Use Current Location Button */}
               {settings.location.useGeolocation && (
                 <div className="mt-3">
                   <button
                     onClick={handleUseCurrentLocation}
                     disabled={isFetchingLocation}
                     className={`w-full py-2 px-4 rounded font-semibold transition ${
-                      isFetchingLocation
-                        ? 'opacity-50 cursor-not-allowed'
-                        : 'hover:opacity-80'
+                      isFetchingLocation ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
                     }`}
                     style={{
                       background: 'rgba(0, 255, 255, 0.2)',
@@ -306,7 +273,6 @@ export const Settings: React.FC = () => {
                     {isFetchingLocation ? '🔄 Getting Location...' : '📍 Use My Current Location'}
                   </button>
                   
-                  {/* Current Location Display */}
                   {settings.location.lastKnownLat !== undefined && settings.location.lastKnownLon !== undefined && (
                     <div className="mt-2 text-xs" style={{ color: 'var(--neon-purple)' }}>
                       Current: {settings.location.lastKnownLat.toFixed(4)}, {settings.location.lastKnownLon.toFixed(4)}
@@ -316,7 +282,6 @@ export const Settings: React.FC = () => {
               )}
             </div>
             
-            {/* City */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>City</label>
@@ -331,8 +296,6 @@ export const Settings: React.FC = () => {
                   className="w-full input-synthwave rounded px-4 py-2"
                 />
               </div>
-              
-              {/* State */}
               <div>
                 <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>State</label>
                 <input
@@ -347,8 +310,7 @@ export const Settings: React.FC = () => {
                 />
               </div>
             </div>
-            
-            {/* ZIP Code */}
+
             <div>
               <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>ZIP Code (Optional)</label>
               <input
@@ -363,7 +325,6 @@ export const Settings: React.FC = () => {
               />
             </div>
             
-            {/* Radius */}
             <div>
               <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
                 Search Radius (miles)
@@ -389,7 +350,6 @@ export const Settings: React.FC = () => {
               </select>
             </div>
             
-            {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={handleUpdateLocation}
@@ -402,14 +362,11 @@ export const Settings: React.FC = () => {
               >
                 {isUpdatingLocation ? '🔄 Updating...' : '📍 Update & Fetch'}
               </button>
-              
               <button
                 onClick={handleTestLocation}
                 disabled={isUpdatingLocation}
                 className={`font-semibold py-3 rounded-lg transition ${
-                  isUpdatingLocation
-                    ? 'opacity-50 cursor-not-allowed'
-                    : ''
+                  isUpdatingLocation ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
                 style={{
                   background: isUpdatingLocation ? 'rgba(100, 100, 100, 0.3)' : 'rgba(139, 0, 255, 0.2)',
@@ -421,7 +378,6 @@ export const Settings: React.FC = () => {
               </button>
             </div>
             
-            {/* Cache Info */}
             <div className="stat-card rounded p-3 mt-4">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between items-center">
@@ -454,207 +410,192 @@ export const Settings: React.FC = () => {
             textShadow: '0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan)'
           }}>Table Strategies</h2>
           {!isEditing && (
-            <button
-              onClick={handleNewStrategy}
-              className="button-primary px-4 py-2 rounded-lg font-semibold"
-            >
+            <button onClick={handleNewStrategy} className="button-primary px-4 py-2 rounded-lg font-semibold">
               + Add Strategy
             </button>
           )}
         </div>
 
-        {/* Edit/Add Form */}
         {isEditing && (
-        <div className="card-synthwave rounded-lg p-6 shadow-lg">
-          <h3 className="text-xl font-semibold mb-4" style={{ 
-            color: 'var(--neon-magenta)',
-            textShadow: '0 0 10px var(--neon-magenta)'
-          }}>
-            {isEditing === 'new' ? 'Add New Strategy' : 'Edit Strategy'}
-          </h3>
-          
-          {/* Error Message */}
-          {errorMessage && (
-            <div className="mb-4 rounded p-3 border-2" style={{
-              background: 'rgba(255, 0, 102, 0.2)',
-              borderColor: '#ff0066',
-              boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
+          <div className="card-synthwave rounded-lg p-6 shadow-lg">
+            <h3 className="text-xl font-semibold mb-4" style={{ 
+              color: 'var(--neon-magenta)',
+              textShadow: '0 0 10px var(--neon-magenta)'
             }}>
-              <p className="text-sm" style={{ color: '#ff0066' }}>{errorMessage}</p>
-            </div>
-          )}
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Table Name</label>
-              <input
-                type="text"
-                value={editForm.table}
-                onChange={(e) => setEditForm({ ...editForm, table: e.target.value })}
-                disabled={isEditing !== 'new'}
-                className="w-full input-synthwave rounded px-4 py-2 disabled:opacity-50"
-                placeholder="e.g., Medieval Madness"
-              />
-            </div>
-            <div>
-              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Skill Shot</label>
-              <textarea
-                value={editForm.skillShot}
-                onChange={(e) => setEditForm({ ...editForm, skillShot: e.target.value })}
-                rows={2}
-                className="w-full input-synthwave rounded px-4 py-2"
-                placeholder="Describe the skill shot strategy..."
-              />
-            </div>
-            <div>
-              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Modes</label>
-              <textarea
-                value={editForm.modes}
-                onChange={(e) => setEditForm({ ...editForm, modes: e.target.value })}
-                rows={3}
-                className="w-full input-synthwave rounded px-4 py-2"
-                placeholder="Describe mode strategy..."
-              />
-            </div>
-            <div>
-              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Multiballs</label>
-              <textarea
-                value={editForm.multiballs}
-                onChange={(e) => setEditForm({ ...editForm, multiballs: e.target.value })}
-                rows={2}
-                className="w-full input-synthwave rounded px-4 py-2"
-                placeholder="Describe multiball strategy..."
-              />
-            </div>
-            <div>
-              <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Tips</label>
-              <textarea
-                value={editForm.tips}
-                onChange={(e) => setEditForm({ ...editForm, tips: e.target.value })}
-                rows={3}
-                className="w-full input-synthwave rounded px-4 py-2"
-                placeholder="General gameplay tips..."
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveStrategy}
-                className="flex-1 button-primary font-semibold py-2 rounded-lg"
-              >
-                Save Strategy
-              </button>
-              <button
-                onClick={handleCancel}
-                className="flex-1 button-secondary font-semibold py-2 rounded-lg"
-              >
-                Cancel
-              </button>
+              {isEditing === 'new' ? 'Add New Strategy' : 'Edit Strategy'}
+            </h3>
+            
+            {errorMessage && (
+              <div className="mb-4 rounded p-3 border-2" style={{
+                background: 'rgba(255, 0, 102, 0.2)',
+                borderColor: '#ff0066',
+                boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
+              }}>
+                <p className="text-sm" style={{ color: '#ff0066' }}>{errorMessage}</p>
+              </div>
+            )}
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Table Name</label>
+                <input
+                  type="text"
+                  value={editForm.table}
+                  onChange={(e) => setEditForm({ ...editForm, table: e.target.value })}
+                  disabled={isEditing !== 'new'}
+                  className="w-full input-synthwave rounded px-4 py-2 disabled:opacity-50"
+                  placeholder="e.g., Medieval Madness"
+                />
+              </div>
+              <div>
+                <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Skill Shot</label>
+                <textarea
+                  value={editForm.skillShot}
+                  onChange={(e) => setEditForm({ ...editForm, skillShot: e.target.value })}
+                  rows={2}
+                  className="w-full input-synthwave rounded px-4 py-2"
+                  placeholder="Describe the skill shot strategy..."
+                />
+              </div>
+              <div>
+                <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Modes</label>
+                <textarea
+                  value={editForm.modes}
+                  onChange={(e) => setEditForm({ ...editForm, modes: e.target.value })}
+                  rows={3}
+                  className="w-full input-synthwave rounded px-4 py-2"
+                  placeholder="Describe mode strategy..."
+                />
+              </div>
+              <div>
+                <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Multiballs</label>
+                <textarea
+                  value={editForm.multiballs}
+                  onChange={(e) => setEditForm({ ...editForm, multiballs: e.target.value })}
+                  rows={2}
+                  className="w-full input-synthwave rounded px-4 py-2"
+                  placeholder="Describe multiball strategy..."
+                />
+              </div>
+              <div>
+                <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>Tips</label>
+                <textarea
+                  value={editForm.tips}
+                  onChange={(e) => setEditForm({ ...editForm, tips: e.target.value })}
+                  rows={3}
+                  className="w-full input-synthwave rounded px-4 py-2"
+                  placeholder="General gameplay tips..."
+                />
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleSaveStrategy} className="flex-1 button-primary font-semibold py-2 rounded-lg">
+                  Save Strategy
+                </button>
+                <button onClick={handleCancel} className="flex-1 button-secondary font-semibold py-2 rounded-lg">
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Strategies List */}
-      {!isEditing && (
-        <div className="space-y-3">
-          {Object.keys(strategies).length === 0 ? (
-            <div className="card-synthwave rounded-lg p-6 text-center">
-              <p style={{ color: 'var(--neon-purple)' }}>No strategies yet. Add your first strategy!</p>
-            </div>
-          ) : (
-            Object.entries(strategies)
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([tableName, strategy]) => (
-                <div key={tableName} className="card-synthwave rounded-lg p-4 shadow-lg">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--neon-cyan)' }}>{strategy.table}</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditStrategy(tableName)}
-                        className="p-2 hover-glow transition"
-                        style={{ color: 'var(--neon-cyan)' }}
-                        title="Edit strategy"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(tableName)}
-                        className="p-2 hover-glow transition"
-                        style={{ color: 'var(--neon-purple)' }}
-                        title="Delete strategy"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    {strategy.skillShot && (
-                      <div>
-                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Skill Shot: </span>
-                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.skillShot}</span>
-                      </div>
-                    )}
-                    {strategy.modes && (
-                      <div>
-                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Modes: </span>
-                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.modes}</span>
-                      </div>
-                    )}
-                    {strategy.multiballs && (
-                      <div>
-                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Multiballs: </span>
-                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.multiballs}</span>
-                      </div>
-                    )}
-                    {strategy.tips && (
-                      <div>
-                        <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Tips: </span>
-                        <span style={{ color: 'var(--neon-purple)' }}>{strategy.tips}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Delete Confirmation */}
-                  {confirmDelete === tableName && (
-                    <div className="mt-3 rounded p-3 border-2" style={{
-                      background: 'rgba(255, 0, 102, 0.2)',
-                      borderColor: '#ff0066',
-                      boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
-                    }}>
-                      <p className="text-sm mb-3" style={{ color: '#ff0066' }}>
-                        Are you sure you want to delete this strategy?
-                      </p>
+        {!isEditing && (
+          <div className="space-y-3">
+            {Object.keys(strategies).length === 0 ? (
+              <div className="card-synthwave rounded-lg p-6 text-center">
+                <p style={{ color: 'var(--neon-purple)' }}>No strategies yet. Add your first strategy!</p>
+              </div>
+            ) : (
+              Object.entries(strategies)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([tableName, strategy]) => (
+                  <div key={tableName} className="card-synthwave rounded-lg p-4 shadow-lg">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="text-lg font-semibold" style={{ color: 'var(--neon-cyan)' }}>{strategy.table}</h3>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleDeleteStrategy(tableName)}
-                          className="flex-1 py-2 rounded font-semibold border-2 transition"
-                          style={{
-                            background: 'rgba(255, 0, 102, 0.3)',
-                            borderColor: '#ff0066',
-                            color: '#ff0066'
-                          }}
+                          onClick={() => handleEditStrategy(tableName)}
+                          className="p-2 hover-glow transition"
+                          style={{ color: 'var(--neon-cyan)' }}
                         >
-                          Delete
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
                         </button>
                         <button
-                          onClick={() => setConfirmDelete(null)}
-                          className="flex-1 button-secondary py-2 rounded font-semibold"
+                          onClick={() => setConfirmDelete(tableName)}
+                          className="p-2 hover-glow transition"
+                          style={{ color: 'var(--neon-purple)' }}
                         >
-                          Cancel
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </div>
                     </div>
-                  )}
-                </div>
-              ))
-          )}
-        </div>
-      )}
+                    
+                    <div className="space-y-2 text-sm">
+                      {strategy.skillShot && (
+                        <div>
+                          <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Skill Shot: </span>
+                          <span style={{ color: 'var(--neon-purple)' }}>{strategy.skillShot}</span>
+                        </div>
+                      )}
+                      {strategy.modes && (
+                        <div>
+                          <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Modes: </span>
+                          <span style={{ color: 'var(--neon-purple)' }}>{strategy.modes}</span>
+                        </div>
+                      )}
+                      {strategy.multiballs && (
+                        <div>
+                          <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Multiballs: </span>
+                          <span style={{ color: 'var(--neon-purple)' }}>{strategy.multiballs}</span>
+                        </div>
+                      )}
+                      {strategy.tips && (
+                        <div>
+                          <span className="font-semibold" style={{ color: 'var(--neon-cyan)' }}>Tips: </span>
+                          <span style={{ color: 'var(--neon-purple)' }}>{strategy.tips}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {confirmDelete === tableName && (
+                      <div className="mt-3 rounded p-3 border-2" style={{
+                        background: 'rgba(255, 0, 102, 0.2)',
+                        borderColor: '#ff0066',
+                        boxShadow: '0 0 10px rgba(255, 0, 102, 0.5)'
+                      }}>
+                        <p className="text-sm mb-3" style={{ color: '#ff0066' }}>
+                          Are you sure you want to delete this strategy?
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleDeleteStrategy(tableName)}
+                            className="flex-1 py-2 rounded font-semibold border-2 transition"
+                            style={{
+                              background: 'rgba(255, 0, 102, 0.3)',
+                              borderColor: '#ff0066',
+                              color: '#ff0066'
+                            }}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => setConfirmDelete(null)}
+                            className="flex-1 button-secondary py-2 rounded font-semibold"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

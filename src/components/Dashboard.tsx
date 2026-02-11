@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { getGames, formatScore } from '../utils';
+import React, { useState, useEffect } from 'react';
+import type { Game } from '../types';
+import { getGames, formatScore } from '../supabaseUtils';
 import { syncIFPAGames } from '../ifpaService';
 
 interface DashboardProps {
@@ -9,8 +10,16 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
-  
-  const games = getGames();
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getGames().then(data => {
+      setGames(data);
+      setLoading(false);
+    });
+  }, []);
+
   const competitiveGames = games.filter(g => g.gameType === 'competitive');
   const wins = competitiveGames.filter(g => g.result === 'win').length;
   const losses = competitiveGames.filter(g => g.result === 'loss').length;
@@ -18,7 +27,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
     ? ((wins / competitiveGames.length) * 100).toFixed(1) 
     : '0.0';
 
-  // Stats by table
   const tableStats = games.reduce((acc, game) => {
     if (!acc[game.table]) {
       acc[game.table] = { wins: 0, losses: 0, total: 0, highScore: 0 };
@@ -32,7 +40,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
     return acc;
   }, {} as Record<string, { wins: number; losses: number; total: number; highScore: number }>);
 
-  // Stats by venue
   const venueStats = games.reduce((acc, game) => {
     if (!acc[game.venue]) {
       acc[game.venue] = { wins: 0, losses: 0, total: 0 };
@@ -43,7 +50,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
     return acc;
   }, {} as Record<string, { wins: number; losses: number; total: number }>);
 
-  // High scores across all games
   const highScores = [...games]
     .sort((a, b) => b.myScore - a.myScore)
     .slice(0, 5);
@@ -61,10 +67,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
         setSyncMessage(`No new games to import. ${result.skipped} games already exist.`);
       } else {
         setSyncMessage(`Successfully imported ${result.imported} games from IFPA!${result.skipped > 0 ? ` (${result.skipped} skipped as duplicates)` : ''}`);
-        // Notify parent to refresh
-        if (onSyncComplete) {
-          onSyncComplete();
-        }
+        if (onSyncComplete) onSyncComplete();
+        // Refresh games after sync
+        const updated = await getGames();
+        setGames(updated);
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -73,6 +79,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
       setIsSyncing(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="font-mono animate-pulse" style={{ color: 'var(--neon-cyan)' }}>
+          LOADING STATS...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -94,7 +110,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
         </button>
       </div>
 
-      {/* Sync Message */}
       {syncMessage && (
         <div className={`rounded-lg p-4 border-2 ${
           syncMessage.includes('Error') || syncMessage.includes('errors')

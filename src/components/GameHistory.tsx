@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Game } from '../types';
-import { getGames, deleteGame, formatScore } from '../utils';
+import { getGames, deleteGame, formatScore } from '../supabaseUtils';
 
 interface GameHistoryProps {
   onGameDeleted: () => void;
@@ -9,10 +9,19 @@ interface GameHistoryProps {
 
 export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted, onEditGame }) => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const games = getGames().sort((a, b) => b.timestamp - a.timestamp);
+  const [games, setGames] = useState<Game[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDelete = (id: string) => {
-    deleteGame(id);
+  useEffect(() => {
+    getGames().then(data => {
+      setGames(data.sort((a, b) => b.timestamp - a.timestamp));
+      setLoading(false);
+    });
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    await deleteGame(id);
+    setGames(prev => prev.filter(g => g.id !== id));
     setConfirmDelete(null);
     onGameDeleted();
   };
@@ -59,6 +68,16 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted, onEditG
     );
   };
 
+  if (loading) {
+    return (
+      <div className="text-center py-12">
+        <p className="font-mono animate-pulse" style={{ color: 'var(--neon-cyan)' }}>
+          LOADING GAMES...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-bold" style={{ 
@@ -74,7 +93,6 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted, onEditG
         <div className="space-y-3">
           {games.map(game => (
             <div key={game.id} className="card-synthwave rounded-lg p-4 shadow-lg">
-              {/* Photo Thumbnail */}
               {game.photoThumbnail && (
                 <div className="mb-3">
                   <img 
@@ -156,7 +174,6 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted, onEditG
                 )}
               </div>
 
-              {/* Percentile */}
               {game.percentile !== undefined && (
                 <div className="rounded p-3 mt-3 border-2" style={{
                   background: 'rgba(0, 255, 255, 0.1)',
@@ -180,7 +197,6 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted, onEditG
                 </div>
               )}
 
-              {/* Delete Confirmation */}
               {confirmDelete === game.id && (
                 <div className="mt-3 rounded p-3 border-2" style={{
                   background: 'rgba(255, 0, 102, 0.2)',
