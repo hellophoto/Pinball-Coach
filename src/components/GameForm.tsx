@@ -191,7 +191,7 @@ useEffect(() => {
     if (!value) return undefined;
     const num = parseFloat(value);
     if (isNaN(num)) return undefined;
-    return Math.max(0, Math.min(100, num));
+    return Math.max(0, Math.min(10, num));
   };
 
   // Refresh location data
@@ -335,8 +335,8 @@ useEffect(() => {
       return;
     }
 
-    const myScoreNum = parseInt(myScore);
-    const opponentScoreNum = opponentScore ? parseInt(opponentScore) : 0;
+    const myScoreNum = parseInt(myScore.replace(/,/g, ''));
+    const opponentScoreNum = opponentScore ? parseInt(opponentScore.replace(/,/g, '')) : 0;
     
     let result: 'win' | 'loss' | 'practice';
     if (gameType === 'practice') {
@@ -528,6 +528,8 @@ useEffect(() => {
                     ? 'No venues found - Update settings or add custom venue' 
                     : 'Select venue...'}
                 </option>
+                <option value="Home">🏠 Home</option>
+                <option value="No Venue">— No Venue —</option>
                 {pinballMapLocations.map(loc => (
                   <option key={`pm-${loc.id}`} value={loc.name}>
                     {formatVenueName(loc)}
@@ -849,13 +851,24 @@ useEffect(() => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block mb-2" style={{ color: 'var(--neon-cyan)' }}>My Score</label>
-            <input
-              type="number"
-              value={myScore}
-              onChange={(e) => setMyScore(e.target.value)}
-              placeholder="0"
-              className="w-full input-synthwave rounded px-4 py-2"
-            />
+              // My Score input
+              <input
+                type="text"
+                inputMode="numeric"
+                value={myScore}
+                onChange={(e) => setMyScore(e.target.value.replace(/[^0-9,]/g, ''))}
+                placeholder="0"
+                className="w-full input-synthwave rounded px-4 py-2"
+              />
+              // Opponent Score input
+              <input
+                type="text"
+                inputMode="numeric"
+                value={opponentScore}
+                onChange={(e) => setOpponentScore(e.target.value.replace(/[^0-9,]/g, ''))}
+                placeholder="0"
+                className="w-full input-synthwave rounded px-4 py-2"
+              />
           </div>
           {gameType === 'competitive' && (
             <div>
@@ -892,7 +905,7 @@ useEffect(() => {
           }}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold" style={{ color: 'var(--neon-cyan)' }}>
-                📊 PinScores Percentile
+                📊 PinScores Rating
               </h3>
               <button
                 type="button"
@@ -938,16 +951,16 @@ useEffect(() => {
 
             <div>
               <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
-                Percentile (0-100, optional)
+                PinScores Rating (0-10, optional)
               </label>
               <input
                 type="number"
                 value={manualPercentile}
                 onChange={(e) => setManualPercentile(e.target.value)}
-                placeholder="e.g., 85.5"
+                placeholder="e.g., 9.439"
                 min="0"
-                max="100"
-                step="0.1"
+                max="10"
+                step="0.001"
                 className="w-full input-synthwave rounded px-4 py-2"
               />
               <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>

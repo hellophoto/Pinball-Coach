@@ -310,7 +310,14 @@ export const saveSettings = async (settings: Settings): Promise<void> => {
 // KEEP these from utils.ts — no migration needed
 // ============================================================
 export const formatScore = (score: number): string => {
-  if (score >= 1_000_000) return `${(score / 1_000_000).toFixed(1)}M`;
-  if (score >= 1_000) return `${(score / 1_000).toFixed(1)}K`;
-  return score.toString();
+  if (score >= 1_000_000_000) {
+    return `${(score / 1_000_000_000).toFixed(3)}B`;
+  }
+  if (score >= 1_000_000) {
+    return `${(score / 1_000_000).toFixed(3)}M`;
+  }
+  if (score >= 1_000) {
+    return `${(score / 1_000).toFixed(1)}K`;
+  }
+  return score.toLocaleString();
 };

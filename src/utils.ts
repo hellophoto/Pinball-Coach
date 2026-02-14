@@ -80,17 +80,18 @@ export const deleteGame = (id: string): void => {
   const filteredGames = games.filter(game => game.id !== id);
   saveGames(filteredGames);
 };
-
 export const formatScore = (score: number): string => {
+  if (score >= 1_000_000_000) {
+    return `${(score / 1_000_000_000).toFixed(3)}B`;
+  }
   if (score >= 1_000_000) {
-    return `${(score / 1_000_000).toFixed(1)}M`;
+    return `${(score / 1_000_000).toFixed(3)}M`;
   }
   if (score >= 1_000) {
     return `${(score / 1_000).toFixed(1)}K`;
   }
-  return score.toString();
+  return score.toLocaleString();
 };
-
 // Table Strategies
 export const getTableStrategies = (): Record<string, TableStrategy> => {
   try {
