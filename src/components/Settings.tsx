@@ -325,6 +325,35 @@ export const Settings: React.FC = () => {
               />
             </div>
             
+            {/* IFPA Player ID */}
+            <div>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
+                IFPA Player ID (Optional)
+              </label>
+              <input
+                type="text"
+                value={settings.ifpaPlayerId || ''}
+                onChange={(e) => setSettingsState({
+                  ...settings,
+                  ifpaPlayerId: e.target.value
+                })}
+                placeholder="12345"
+                className="w-full input-synthwave rounded px-4 py-2"
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
+                Find your player ID at{' '}
+                <a
+                  href="https://www.ifpapinball.com/players.php"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                  style={{ color: 'var(--neon-cyan)' }}
+                >
+                  ifpapinball.com
+                </a>
+              </p>
+            </div>
+
             <div>
               <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
                 Search Radius (miles)

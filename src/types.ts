@@ -53,12 +53,13 @@ export interface Settings {
     zipCode?: string;
     radius: number; // miles
     opdbLastUpdated?: number;
-    useGeolocation?: boolean; // NEW
-    lastKnownLat?: number; // NEW
-    lastKnownLon?: number; // NEW
-    region?: string; // NEW (e.g., "portland", "seattle")
+    useGeolocation?: boolean;
+    lastKnownLat?: number;
+    lastKnownLon?: number;
+    region?: string;
   };
   pinballMapLastUpdated?: number;
+  ifpaPlayerId?: string; // ADD THIS LINE
 }
 
 // OPDB types

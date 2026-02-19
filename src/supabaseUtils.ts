@@ -252,11 +252,8 @@ export const deleteTableStrategy = async (tableName: string): Promise<void> => {
 // SETTINGS
 // ============================================================
 const DEFAULT_SETTINGS: Settings = {
-  location: {
-    city: 'Portland',
-    state: 'OR',
-    radius: 25,
-  },
+  location: { city: 'Portland', state: 'OR', radius: 25 },
+  ifpaPlayerId: undefined, // ADD THIS LINE
 };
 
 export const getSettings = async (): Promise<Settings> => {
@@ -282,6 +279,7 @@ export const getSettings = async (): Promise<Settings> => {
     pinballMapLastUpdated: data.pinball_map_last_updated
       ? new Date(data.pinball_map_last_updated).getTime()
       : undefined,
+    ifpaPlayerId: data.ifpa_player_id, // ADD THIS LINE
   };
 };
 
@@ -301,6 +299,7 @@ export const saveSettings = async (settings: Settings): Promise<void> => {
       pinball_map_last_updated: settings.pinballMapLastUpdated
         ? new Date(settings.pinballMapLastUpdated).toISOString()
         : null,
+      ifpa_player_id: settings.ifpaPlayerId, // ADD THIS LINE
     }, { onConflict: 'user_id' });
 
   if (error) console.error('Error saving settings:', error);
