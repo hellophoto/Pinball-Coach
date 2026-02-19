@@ -7,8 +7,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Player ID required' });
   }
 
+  const apiKey = process.env.IFPA_API_KEY;
+  
+  if (!apiKey) {
+    return res.status(500).json({ error: 'IFPA API key not configured' });
+  }
+
   try {
-    const response = await fetch(`https://api.ifpapinball.com/v1/player/${playerId}/results`);
+    const response = await fetch(
+      `https://api.ifpapinball.com/v1/player/${playerId}/results?api_key=${apiKey}`
+    );
     
     if (!response.ok) {
       return res.status(response.status).json({ error: `IFPA API error: ${response.statusText}` });
