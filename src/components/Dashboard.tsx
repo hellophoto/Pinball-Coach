@@ -198,7 +198,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
                       <span className="font-bold text-lg" style={{ 
                         color: 'var(--neon-yellow)',
                         textShadow: '0 0 10px var(--neon-yellow)'
-                      }}>{game.percentile.toFixed(3)}</span>
+                      }}>{game.percentile?.toFixed(3) || 'N/A'}</span>
                     </div>
                   )}
                 </div>
