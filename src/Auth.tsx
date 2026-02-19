@@ -54,6 +54,7 @@ export default function Auth() {
                 required
                 className="input-field w-full px-4 py-3 font-mono"
                 placeholder="you@example.com"
+                style={{ color: 'var(--neon-cyan)' }}
               />
             </div>
 
@@ -69,6 +70,7 @@ export default function Auth() {
                 minLength={6}
                 className="input-field w-full px-4 py-3 font-mono"
                 placeholder="••••••••"
+                style={{ color: 'var(--neon-cyan)' }}
               />
             </div>
 
