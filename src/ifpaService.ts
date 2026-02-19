@@ -25,16 +25,17 @@ export interface IFPASyncResult {
 
 export const fetchIFPAResults = async (playerId: string): Promise<IFPAResult[]> => {
   try {
-    // Use CORS proxy for browser requests
-    const corsProxy = 'https://corsproxy.io/?';
+    // Use allorigins proxy for browser requests
     const apiUrl = `${IFPA_API_BASE}/player/${playerId}/results`;
-    const response = await fetch(`${corsProxy}${encodeURIComponent(apiUrl)}`);
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+    const response = await fetch(proxyUrl);
     
     if (!response.ok) {
       throw new Error(`IFPA API error: ${response.status} ${response.statusText}`);
     }
     
-    const data = await response.json();
+    const proxyData = await response.json();
+    const data = JSON.parse(proxyData.contents);
     
     if (data && data.results && Array.isArray(data.results)) {
       return data.results;
