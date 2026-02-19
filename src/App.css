@@ -256,3 +256,11 @@
     padding: 1.5rem;
   }
 }
+/* Icon button minimum touch target */
+.icon-button {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

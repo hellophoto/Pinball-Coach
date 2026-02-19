@@ -194,9 +194,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
                       borderColor: 'var(--neon-cyan)',
                       boxShadow: '0 0 10px var(--neon-cyan)'
                     }}>
-                      <span className="text-xs font-semibold" style={{ color: 'var(--neon-cyan)' }}>
-                        {game.percentile.toFixed(1)}%
-                      </span>
+                     <span className="text-sm" style={{ color: 'var(--neon-cyan)' }}>PinScores Rating:</span>
+                      <span className="font-bold text-lg" style={{ 
+                        color: 'var(--neon-yellow)',
+                        textShadow: '0 0 10px var(--neon-yellow)'
+                      }}>{game.percentile.toFixed(3)}</span>
                     </div>
                   )}
                 </div>

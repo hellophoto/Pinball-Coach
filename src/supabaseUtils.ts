@@ -208,7 +208,7 @@ export const getTableStrategy = async (tableName: string): Promise<TableStrategy
     .select('*')
     .eq('user_id', userId)
     .eq('table_name', tableName)
-    .single();
+    .maybeSingle();
 
   if (error || !data) return undefined;
 
