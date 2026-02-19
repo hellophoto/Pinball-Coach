@@ -25,7 +25,10 @@ export interface IFPASyncResult {
 
 export const fetchIFPAResults = async (playerId: string): Promise<IFPAResult[]> => {
   try {
-    const response = await fetch(`${IFPA_API_BASE}/player/${playerId}/results`);
+    // Use CORS proxy for browser requests
+    const corsProxy = 'https://corsproxy.io/?';
+    const apiUrl = `${IFPA_API_BASE}/player/${playerId}/results`;
+    const response = await fetch(`${corsProxy}${encodeURIComponent(apiUrl)}`);
     
     if (!response.ok) {
       throw new Error(`IFPA API error: ${response.status} ${response.statusText}`);
