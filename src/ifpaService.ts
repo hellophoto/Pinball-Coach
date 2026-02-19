@@ -1,8 +1,7 @@
-import { addGame, getGames } from './utils';
+import { addGame, getGames } from './supabaseUtils';
+import { getSettings } from './supabaseUtils';
 
 const IFPA_API_BASE = 'https://api.ifpapinball.com/v1';
-// Default player ID - can be made configurable in future versions
-const DEFAULT_PLAYER_ID = '130319';
 const WIN_POSITION_THRESHOLD = 3; // Top 3 positions considered wins
 const UNKNOWN_SCORE = 0; // IFPA API does not provide individual game scores
 
@@ -24,9 +23,9 @@ export interface IFPASyncResult {
   errors: string[];
 }
 
-export const fetchIFPAResults = async (): Promise<IFPAResult[]> => {
+export const fetchIFPAResults = async (playerId: string): Promise<IFPAResult[]> => {
   try {
-    const response = await fetch(`${IFPA_API_BASE}/player/${DEFAULT_PLAYER_ID}/results`);
+    const response = await fetch(`${IFPA_API_BASE}/player/${playerId}/results`);
     
     if (!response.ok) {
       throw new Error(`IFPA API error: ${response.status} ${response.statusText}`);
@@ -34,8 +33,6 @@ export const fetchIFPAResults = async (): Promise<IFPAResult[]> => {
     
     const data = await response.json();
     
-    // The IFPA API returns results in a specific format
-    // Check if we have results array
     if (data && data.results && Array.isArray(data.results)) {
       return data.results;
     }
@@ -55,8 +52,16 @@ export const syncIFPAGames = async (): Promise<IFPASyncResult> => {
   };
 
   try {
-    const ifpaResults = await fetchIFPAResults();
-    const existingGames = getGames();
+    // Get player ID from settings
+    const settings = await getSettings();
+    
+    if (!settings.ifpaPlayerId) {
+      result.errors.push('IFPA Player ID not set. Please add your player ID in Settings.');
+      return result;
+    }
+
+    const ifpaResults = await fetchIFPAResults(settings.ifpaPlayerId);
+    const existingGames = await getGames();
     
     // Create a set of existing IFPA game identifiers to avoid duplicates
     const existingIFPAGames = new Set(
@@ -67,31 +72,24 @@ export const syncIFPAGames = async (): Promise<IFPASyncResult> => {
 
     for (const ifpaResult of ifpaResults) {
       try {
-        // Parse date to timestamp
         const eventDate = new Date(ifpaResult.event_date);
         const timestamp = eventDate.getTime();
         
-        // Use tournament name as venue, machine name as table (or event name if no machine)
         const venue = ifpaResult.tournament_name || ifpaResult.event_name;
         const table = ifpaResult.machine_name || ifpaResult.event_name;
         
-        // Create unique identifier
         const gameIdentifier = `${venue}-${table}-${timestamp}`;
         
-        // Skip if already imported
         if (existingIFPAGames.has(gameIdentifier)) {
           result.skipped++;
           continue;
         }
 
-        // Determine result based on position
-        // Top positions are considered wins for motivation
         const isWin = ifpaResult.position <= WIN_POSITION_THRESHOLD;
         const gameType = 'competitive';
         const gameResult = isWin ? 'win' : 'loss';
         
-        // Add game with IFPA source tag
-        addGame({
+        await addGame({
           venue,
           table,
           myScore: UNKNOWN_SCORE,
