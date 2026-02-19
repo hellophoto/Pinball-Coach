@@ -1,7 +1,6 @@
 import { addGame, getGames } from './supabaseUtils';
 import { getSettings } from './supabaseUtils';
 
-const IFPA_API_BASE = 'https://api.ifpapinball.com/v1';
 const WIN_POSITION_THRESHOLD = 3; // Top 3 positions considered wins
 const UNKNOWN_SCORE = 0; // IFPA API does not provide individual game scores
 
@@ -25,17 +24,14 @@ export interface IFPASyncResult {
 
 export const fetchIFPAResults = async (playerId: string): Promise<IFPAResult[]> => {
   try {
-    // Use allorigins proxy for browser requests
-    const apiUrl = `${IFPA_API_BASE}/player/${playerId}/results`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
-    const response = await fetch(proxyUrl);
+    // Use our Vercel serverless function as proxy
+    const response = await fetch(`/api/ifpa-proxy?playerId=${playerId}`);
     
     if (!response.ok) {
       throw new Error(`IFPA API error: ${response.status} ${response.statusText}`);
     }
     
-    const proxyData = await response.json();
-    const data = JSON.parse(proxyData.contents);
+    const data = await response.json();
     
     if (data && data.results && Array.isArray(data.results)) {
       return data.results;
