@@ -6,9 +6,10 @@ import { GameForm } from './components/GameForm';
 import { Dashboard } from './components/Dashboard';
 import { GameHistory } from './components/GameHistory';
 import { Settings } from './components/Settings';
+import { PracticeSession } from './components/PracticeSession';
 import './App.css';
 
-type View = 'form' | 'dashboard' | 'history' | 'settings';
+type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -111,6 +112,14 @@ function App() {
                 view === 'history' ? 'nav-button-active' : ''
               }`}
             >
+            <button
+              onClick={() => { setView('practice'); setEditGameId(undefined); }}
+              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+                view === 'practice' ? 'nav-button-active' : ''
+              }`}
+            >
+              Practice
+            </button>
               History
             </button>
             <button
@@ -140,6 +149,7 @@ function App() {
           </div>
         )}
         {view === 'settings' && <Settings />}
+        {view === 'practice' && <PracticeSession />}
       </main>
     </div>
   );

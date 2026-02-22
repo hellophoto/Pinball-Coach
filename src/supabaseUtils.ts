@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Game, TableStrategy, Settings } from './types';
+import type { Game, TableStrategy, Settings, PracticeSession } from './types';
 
 // ============================================================
 // HELPER: get current user id
@@ -303,6 +303,105 @@ export const saveSettings = async (settings: Settings): Promise<void> => {
     }, { onConflict: 'user_id' });
 
   if (error) console.error('Error saving settings:', error);
+};
+// Practice Sessions
+export const createPracticeSession = async (venue: string): Promise<PracticeSession> => {
+  const userId = await getUserId();
+  const now = new Date().toISOString();
+  
+  const { data, error } = await supabase
+    .from('practice_sessions')
+    .insert({
+      user_id: userId,
+      venue,
+      start_time: now,
+      status: 'active',
+      games: [],
+    })
+    .select()
+    .single();
+
+  if (error || !data) throw new Error('Failed to create practice session');
+
+  return {
+    id: data.id,
+    venue: data.venue,
+    startTime: new Date(data.start_time).getTime(),
+    endTime: data.end_time ? new Date(data.end_time).getTime() : undefined,
+    status: data.status,
+    games: data.games,
+  };
+};
+
+export const updatePracticeSession = async (
+  sessionId: string,
+  games: PracticeSession['games']
+): Promise<void> => {
+  const { error } = await supabase
+    .from('practice_sessions')
+    .update({ games })
+    .eq('id', sessionId);
+
+  if (error) throw new Error('Failed to update practice session');
+};
+
+export const endPracticeSession = async (sessionId: string): Promise<void> => {
+  const now = new Date().toISOString();
+  
+  const { error } = await supabase
+    .from('practice_sessions')
+    .update({
+      status: 'completed',
+      end_time: now,
+    })
+    .eq('id', sessionId);
+
+  if (error) throw new Error('Failed to end practice session');
+};
+
+export const getActiveSession = async (): Promise<PracticeSession | null> => {
+  const userId = await getUserId();
+  
+  const { data, error } = await supabase
+    .from('practice_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('start_time', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    id: data.id,
+    venue: data.venue,
+    startTime: new Date(data.start_time).getTime(),
+    endTime: data.end_time ? new Date(data.end_time).getTime() : undefined,
+    status: data.status,
+    games: data.games,
+  };
+};
+
+export const getPracticeSessions = async (): Promise<PracticeSession[]> => {
+  const userId = await getUserId();
+  
+  const { data, error } = await supabase
+    .from('practice_sessions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('start_time', { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map(row => ({
+    id: row.id,
+    venue: row.venue,
+    startTime: new Date(row.start_time).getTime(),
+    endTime: row.end_time ? new Date(row.end_time).getTime() : undefined,
+    status: row.status,
+    games: row.games,
+  }));
 };
 
 // ============================================================

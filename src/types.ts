@@ -85,3 +85,23 @@ export interface OPDBMachine {
   rule_complexity?: number;
   gameplay_complexity?: number;
 }
+
+//Practice Sessions
+export interface PracticeSession {
+  id: string;
+  venue: string;
+  startTime: number;
+  endTime?: number;
+  status: 'active' | 'completed';
+  games: Array<{
+    table: string;
+    highScore: number;
+    achievements: {
+      skillShot: boolean;
+      multiball: boolean;
+      wizardMode: boolean;
+      jackpot: boolean;
+    };
+    notes?: string;
+  }>;
+}
