@@ -1,11 +1,105 @@
 import React, { useState, useEffect } from 'react';
 import type { Game } from '../types';
-import { getGames, formatScore } from '../supabaseUtils';
+import { getGames, formatScore, getPracticeSessions } from '../supabaseUtils';
 import { syncIFPAGames } from '../ifpaService';
 
 interface DashboardProps {
   onSyncComplete?: () => void;
 }
+
+// Practice Stats Widget Component
+const PracticeStatsWidget: React.FC = () => {
+  const [practiceMinutes, setPracticeMinutes] = useState(0);
+  const [topMachines, setTopMachines] = useState<Array<{ table: string; count: number }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPracticeStats();
+  }, []);
+
+  const loadPracticeStats = async () => {
+    try {
+      const sessions = await getPracticeSessions();
+      
+      // Calculate practice time in last 7 days
+      const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+      const recentSessions = sessions.filter(s => 
+        s.status === 'completed' && 
+        s.startTime >= sevenDaysAgo &&
+        s.endTime
+      );
+      
+      const totalMinutes = recentSessions.reduce((sum, session) => {
+        if (session.endTime) {
+          return sum + Math.floor((session.endTime - session.startTime) / 60000);
+        }
+        return sum;
+      }, 0);
+      
+      setPracticeMinutes(totalMinutes);
+      
+      // Get top practiced machines
+      const machineCounts: Record<string, number> = {};
+      recentSessions.forEach(session => {
+        session.games.forEach(game => {
+          machineCounts[game.table] = (machineCounts[game.table] || 0) + 1;
+        });
+      });
+      
+      const sorted = Object.entries(machineCounts)
+        .map(([table, count]) => ({ table, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
+      
+      setTopMachines(sorted);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading practice stats:', error);
+      setLoading(false);
+    }
+  };
+
+  if (loading) return null;
+  if (practiceMinutes === 0 && topMachines.length === 0) return null;
+
+  const hours = Math.floor(practiceMinutes / 60);
+  const mins = practiceMinutes % 60;
+
+  return (
+    <div className="card-synthwave rounded-lg p-6">
+      <h3 className="text-xl font-semibold mb-4" style={{ 
+        color: 'var(--neon-magenta)',
+        textShadow: '0 0 10px var(--neon-magenta)'
+      }}>Practice Stats (Last 7 Days)</h3>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="stat-card rounded p-4">
+          <div className="text-sm" style={{ color: 'var(--neon-purple)' }}>Total Practice Time</div>
+          <div className="text-2xl font-bold score-animate" style={{ 
+            color: 'var(--neon-cyan)',
+            textShadow: '0 0 10px var(--neon-cyan)'
+          }}>
+            {hours > 0 ? `${hours}h ${mins}m` : `${mins}m`}
+          </div>
+        </div>
+        
+        {topMachines.length > 0 && (
+          <div className="stat-card rounded p-4">
+            <div className="text-sm mb-2" style={{ color: 'var(--neon-purple)' }}>Top Practiced Machines</div>
+            <div className="space-y-1">
+              {topMachines.map(machine => (
+                <div key={machine.table} className="flex justify-between text-sm">
+                  <span style={{ color: 'var(--neon-cyan)' }}>{machine.table}</span>
+                  <span style={{ color: 'var(--neon-yellow)' }}>{machine.count}x</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
   const [isSyncing, setIsSyncing] = useState(false);
@@ -68,7 +162,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
       } else {
         setSyncMessage(`Successfully imported ${result.imported} games from IFPA!${result.skipped > 0 ? ` (${result.skipped} skipped as duplicates)` : ''}`);
         if (onSyncComplete) onSyncComplete();
-        // Refresh games after sync
         const updated = await getGames();
         setGames(updated);
       }
@@ -164,6 +257,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
         </div>
       </div>
 
+      {/* Practice Stats Widget */}
+      <PracticeStatsWidget />
+
       {/* High Scores */}
       {highScores.length > 0 && (
         <div className="card-synthwave rounded-lg p-6">
@@ -188,17 +284,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSyncComplete }) => {
                   }}>
                     {formatScore(game.myScore)}
                   </div>
-                  {game.percentile !== undefined && (
+                  {game.percentile !== undefined && game.percentile !== null && (
                     <div className="rounded px-2 py-1 border-2" style={{
                       background: 'rgba(0, 255, 255, 0.1)',
                       borderColor: 'var(--neon-cyan)',
                       boxShadow: '0 0 10px var(--neon-cyan)'
                     }}>
-                     <span className="text-sm" style={{ color: 'var(--neon-cyan)' }}>PinScores Rating:</span>
-                      <span className="font-bold text-lg" style={{ 
-                        color: 'var(--neon-yellow)',
-                        textShadow: '0 0 10px var(--neon-yellow)'
-                      }}>{game.percentile?.toFixed(3) || 'N/A'}</span>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--neon-cyan)' }}>
+                        {game.percentile.toFixed(3)}
+                      </span>
                     </div>
                   )}
                 </div>

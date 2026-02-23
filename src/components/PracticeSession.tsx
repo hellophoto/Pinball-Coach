@@ -15,7 +15,9 @@ export const PracticeSession: React.FC = () => {
   const [pinballMapLocations, setPinballMapLocations] = useState<PinballMapLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<PinballMapLocation | null>(null);
-  const [editingGame, setEditingGame] = useState<number | null>(null);
+  const [showAddMachine, setShowAddMachine] = useState(false);
+  const [customMachineName, setCustomMachineName] = useState('');
+  const [editingScore, setEditingScore] = useState<number | null>(null);
   const [scoreInput, setScoreInput] = useState('');
 
   useEffect(() => {
@@ -42,21 +44,18 @@ export const PracticeSession: React.FC = () => {
         settings.location.lastKnownLon
       );
       setPinballMapLocations(result.locations);
+      
+      // If there's an active session, find its venue location
+      if (session) {
+        const loc = result.locations.find(l => l.name === session.venue);
+        setSelectedLocation(loc || null);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (venue) {
-      const location = pinballMapLocations.find(loc => loc.name === venue);
-      setSelectedLocation(location || null);
-    } else {
-      setSelectedLocation(null);
-    }
-  }, [venue, pinballMapLocations]);
 
   const handleStartSession = async () => {
     if (!venue) {
@@ -67,6 +66,8 @@ export const PracticeSession: React.FC = () => {
     try {
       const session = await createPracticeSession(venue);
       setActiveSession(session);
+      const loc = pinballMapLocations.find(l => l.name === venue);
+      setSelectedLocation(loc || null);
     } catch (error) {
       console.error('Error starting session:', error);
       alert('Failed to start practice session');
@@ -75,6 +76,7 @@ export const PracticeSession: React.FC = () => {
 
   const handleAddMachine = (machineName: string) => {
     if (!activeSession) return;
+    if (!machineName.trim()) return;
 
     const newGame = {
       table: machineName,
@@ -91,6 +93,8 @@ export const PracticeSession: React.FC = () => {
     const updatedGames = [...activeSession.games, newGame];
     updatePracticeSession(activeSession.id, updatedGames).then(() => {
       setActiveSession({ ...activeSession, games: updatedGames });
+      setShowAddMachine(false);
+      setCustomMachineName('');
     });
   };
 
@@ -114,7 +118,7 @@ export const PracticeSession: React.FC = () => {
     
     updatePracticeSession(activeSession.id, updatedGames).then(() => {
       setActiveSession({ ...activeSession, games: updatedGames });
-      setEditingGame(null);
+      setEditingScore(null);
       setScoreInput('');
     });
   };
@@ -146,7 +150,7 @@ export const PracticeSession: React.FC = () => {
   const handleEndSession = async () => {
     if (!activeSession) return;
 
-    if (!window.confirm('End this practice session?')) return;
+    if (!window.confirm('End this practice session? All games will be saved.')) return;
 
     try {
       await endPracticeSession(activeSession.id);
@@ -224,16 +228,22 @@ export const PracticeSession: React.FC = () => {
     <div className="max-w-[800px] mx-auto space-y-4">
       {/* Session Header */}
       <div className="card-synthwave rounded-lg p-6 shadow-lg">
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start">
           <div>
             <h2 className="text-2xl font-bold mb-2" style={{ 
               color: 'var(--neon-cyan)',
               textShadow: '0 0 10px var(--neon-cyan)'
             }}>
-              🎮 Active Session
+              🎮 Practice Session
             </h2>
-            <p className="text-sm" style={{ color: 'var(--neon-purple)' }}>
-              {activeSession.venue} • {formatDuration(activeSession.startTime)}
+            <p className="text-sm mb-1" style={{ color: 'var(--neon-purple)' }}>
+              {activeSession.venue}
+            </p>
+            <p className="text-lg font-mono font-bold" style={{ 
+              color: 'var(--neon-yellow)',
+              textShadow: '0 0 10px var(--neon-yellow)'
+            }}>
+              ⏱️ {formatDuration(activeSession.startTime)}
             </p>
           </div>
           <button
@@ -248,40 +258,102 @@ export const PracticeSession: React.FC = () => {
             End Session
           </button>
         </div>
+      </div>
 
-        {/* Add Machine Section */}
-        {selectedLocation && selectedLocation.machines.length > 0 && (
-          <div className="mt-4">
-            <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--neon-cyan)' }}>
-              📍 Available Machines
-            </h3>
-            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
-              {selectedLocation.machines
-                .filter(m => !activeSession.games.find(g => g.table === m.name))
-                .map(machine => (
-                  <button
-                    key={machine.id}
-                    onClick={() => handleAddMachine(machine.name)}
-                    className="text-left px-3 py-2 rounded text-sm transition border-2"
-                    style={{
-                      background: 'rgba(139, 0, 255, 0.1)',
-                      borderColor: 'var(--neon-purple)',
-                      color: 'var(--neon-purple)',
-                    }}
-                  >
-                    + {machine.name}
-                  </button>
-                ))}
+      {/* Add Machine Button */}
+      <button
+        onClick={() => setShowAddMachine(true)}
+        className="w-full py-3 rounded-lg font-semibold border-2 transition"
+        style={{
+          background: 'rgba(0, 255, 136, 0.1)',
+          borderColor: '#00ff88',
+          color: '#00ff88',
+        }}
+      >
+        + Add Machine
+      </button>
+
+      {/* Add Machine Modal */}
+      {showAddMachine && (
+        <div className="card-synthwave rounded-lg p-6 shadow-lg">
+          <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--neon-cyan)' }}>
+            Add Machine
+          </h3>
+
+          {/* Available machines from venue */}
+          {selectedLocation && selectedLocation.machines.length > 0 && (
+            <div className="mb-4">
+              <p className="text-sm mb-2" style={{ color: 'var(--neon-purple)' }}>
+                Select from {selectedLocation.name}:
+              </p>
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto mb-4">
+                {selectedLocation.machines
+                  .filter(m => !activeSession.games.find(g => g.table === m.name))
+                  .map(machine => (
+                    <button
+                      key={machine.id}
+                      onClick={() => handleAddMachine(machine.name)}
+                      className="text-left px-3 py-2 rounded text-sm transition border-2"
+                      style={{
+                        background: 'rgba(139, 0, 255, 0.1)',
+                        borderColor: 'var(--neon-purple)',
+                        color: 'var(--neon-purple)',
+                      }}
+                    >
+                      {machine.name}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Custom machine input */}
+          <div>
+            <p className="text-sm mb-2" style={{ color: 'var(--neon-purple)' }}>
+              Or enter custom machine:
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customMachineName}
+                onChange={(e) => setCustomMachineName(e.target.value)}
+                placeholder="Machine name..."
+                className="flex-1 input-synthwave rounded px-4 py-2"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleAddMachine(customMachineName);
+                }}
+              />
+              <button
+                onClick={() => handleAddMachine(customMachineName)}
+                className="px-4 py-2 rounded font-semibold"
+                style={{
+                  background: 'rgba(0, 255, 136, 0.2)',
+                  border: '2px solid #00ff88',
+                  color: '#00ff88',
+                }}
+              >
+                Add
+              </button>
             </div>
           </div>
-        )}
-      </div>
+
+          <button
+            onClick={() => {
+              setShowAddMachine(false);
+              setCustomMachineName('');
+            }}
+            className="w-full button-secondary py-2 rounded font-semibold mt-4"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       {/* Games List */}
       {activeSession.games.length === 0 ? (
         <div className="card-synthwave rounded-lg p-6 text-center">
           <p style={{ color: 'var(--neon-purple)' }}>
-            No machines added yet. Select machines from the list above.
+            No machines added yet. Click "Add Machine" to start tracking.
           </p>
         </div>
       ) : (
@@ -294,11 +366,12 @@ export const PracticeSession: React.FC = () => {
                 </h3>
                 <button
                   onClick={() => handleRemoveMachine(index)}
-                  className="p-1 transition"
+                  className="p-1 transition icon-button"
                   style={{ color: 'var(--neon-purple)' }}
                   title="Remove machine"
+                  aria-label="Remove machine"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -309,7 +382,7 @@ export const PracticeSession: React.FC = () => {
                 <label className="block text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>
                   High Score
                 </label>
-                {editingGame === index ? (
+                {editingScore === index ? (
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -331,11 +404,20 @@ export const PracticeSession: React.FC = () => {
                     >
                       Save
                     </button>
+                    <button
+                      onClick={() => {
+                        setEditingScore(null);
+                        setScoreInput('');
+                      }}
+                      className="px-4 py-2 rounded font-semibold button-secondary"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => {
-                      setEditingGame(index);
+                      setEditingScore(index);
                       setScoreInput(game.highScore > 0 ? game.highScore.toString() : '');
                     }}
                     className="w-full text-left px-3 py-2 rounded border-2 transition"

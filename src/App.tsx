@@ -90,67 +90,72 @@ function App() {
             </div>
           </div>
           <nav className="flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={() => { setView('dashboard'); setEditGameId(undefined); }}
-              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-                view === 'dashboard' ? 'nav-button-active' : ''
-              }`}
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => { setView('form'); setEditGameId(undefined); }}
-              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-                view === 'form' ? 'nav-button-active' : ''
-              }`}
-            >
-              Add Game
-            </button>
-            <button
-              onClick={() => { setView('history'); setEditGameId(undefined); }}
-              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-                view === 'history' ? 'nav-button-active' : ''
-              }`}
-            >
-            <button
-              onClick={() => { setView('practice'); setEditGameId(undefined); }}
-              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-                view === 'practice' ? 'nav-button-active' : ''
-              }`}
-            >
-              Practice
-            </button>
-              History
-            </button>
-            <button
-              onClick={() => { setView('settings'); setEditGameId(undefined); }}
-              className={`flex-1 w-full py-2 px-3 sm:px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-                view === 'settings' ? 'nav-button-active' : ''
-              }`}
-            >
-              Settings
-            </button>
-          </nav>
+          <button
+            onClick={() => { setView('dashboard'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'dashboard' ? 'nav-button-active' : ''
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => { setView('form'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'form' ? 'nav-button-active' : ''
+            }`}
+          >
+            Add Game
+          </button>
+          <button
+            onClick={() => { setView('practice'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'practice' ? 'nav-button-active' : ''
+            }`}
+          >
+            Practice
+          </button>
+          <button
+            onClick={() => { setView('history'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'history' ? 'nav-button-active' : ''
+            }`}
+          >
+            History
+          </button>
+          <button
+            onClick={() => { setView('settings'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'settings' ? 'nav-button-active' : ''
+            }`}
+          >
+            Settings
+          </button>
+        </nav>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {view === 'dashboard' && (
-          <div key={refreshKey}>
-            <Dashboard onSyncComplete={handleIFPASync} />
-          </div>
-        )}
-        {view === 'form' && (
-          <GameForm onGameAdded={handleGameAdded} editGameId={editGameId} />
-        )}
-        {view === 'history' && (
-          <div key={refreshKey}>
-            <GameHistory onGameDeleted={handleGameDeleted} onEditGame={handleEditGame} />
-          </div>
-        )}
-        {view === 'settings' && <Settings />}
-        {view === 'practice' && <PracticeSession />}
-      </main>
+<main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  {view === 'dashboard' && (
+    <div key={refreshKey}>
+      <Dashboard onSyncComplete={handleIFPASync} />
+    </div>
+  )}
+  {view === 'form' && (
+    <GameForm onGameAdded={handleGameAdded} editGameId={editGameId} />
+  )}
+  {view === 'history' && (
+    <div key={refreshKey}>
+      <GameHistory onGameDeleted={handleGameDeleted} onEditGame={handleEditGame} />
+    </div>
+  )}
+  {view === 'settings' && <Settings />}
+  {view === 'practice' && (
+    <div>
+      <p style={{ color: 'red' }}>PRACTICE VIEW LOADED</p>
+      <PracticeSession />
+    </div>
+  )}
+    </main>
     </div>
   );
 }
