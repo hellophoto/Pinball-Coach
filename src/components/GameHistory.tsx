@@ -129,59 +129,71 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted, onEditG
                   </div>
                 </div>
                 <div className="flex gap-2">
-                <button
-                  onClick={() => onEditGame?.(game.id)}
-                  className="p-2 transition hover-glow icon-button"
-                  style={{ color: 'var(--neon-cyan)' }}
-                  title="Edit game"
-                  aria-label="Edit game"
-                >
-                  {/* svg stays the same */}
-                </button>
-                <button
-                  onClick={() => setConfirmDelete(game.id)}
-                  className="p-2 transition hover-glow icon-button"
-                  style={{ color: 'var(--neon-purple)' }}
-                  title="Delete game"
-                  aria-label="Delete game"
-                >
-                  {/* svg stays the same */}
-                </button>
-                <button
-                  onClick={() => setConfirmDelete(game.id)}
-                  className="p-2 transition hover-glow"
-                  style={{ color: 'var(--neon-purple)' }}
-                  title="Delete game"
-                  aria-label="Delete game"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
+                  <button
+                    onClick={() => onEditGame?.(game.id)}
+                    className="p-2 transition hover-glow icon-button"
+                    style={{ color: 'var(--neon-cyan)' }}
+                    title="Edit game"
+                    aria-label="Edit game"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(game.id)}
+                    className="p-2 transition hover-glow icon-button"
+                    style={{ color: 'var(--neon-purple)' }}
+                    title="Delete game"
+                    aria-label="Delete game"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>My Score</div>
-                  <div className="font-bold text-xl" style={{ 
-                    color: 'var(--neon-yellow)',
-                    textShadow: '0 0 10px var(--neon-yellow)'
-                  }}>
-                    {formatScore(game.myScore)}
+              {/* IFPA games show placement, regular games show scores */}
+              {game.source === 'ifpa' ? (
+                <div className="rounded p-3 mb-3 border-2" style={{
+                  background: 'rgba(255, 0, 255, 0.1)',
+                  borderColor: 'var(--neon-magenta)',
+                  boxShadow: '0 0 10px var(--neon-magenta)'
+                }}>
+                  <div className="text-sm font-semibold mb-1" style={{ color: 'var(--neon-magenta)' }}>
+                    IFPA Tournament Result
                   </div>
+                  {game.notes && (
+                    <div className="text-xs" style={{ color: 'var(--neon-purple)' }}>
+                      {game.notes.split('\n').slice(1, 3).join(' • ')}
+                    </div>
+                  )}
                 </div>
-                {game.gameType === 'competitive' && (
+              ) : (
+                <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
-                    <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>Opponent Score</div>
-                    <div className="font-bold text-xl" style={{ color: 'var(--neon-cyan)' }}>
-                      {formatScore(game.opponentScore)}
+                    <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>My Score</div>
+                    <div className="font-bold text-xl" style={{ 
+                      color: 'var(--neon-yellow)',
+                      textShadow: '0 0 10px var(--neon-yellow)'
+                    }}>
+                      {formatScore(game.myScore)}
                     </div>
                   </div>
-                )}
-              </div>
+                  {game.gameType === 'competitive' && (
+                    <div>
+                      <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>Opponent Score</div>
+                      <div className="font-bold text-xl" style={{ color: 'var(--neon-cyan)' }}>
+                        {formatScore(game.opponentScore)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {game.percentile !== undefined && (
+              {/* Percentile */}
+              {game.percentile !== undefined && game.percentile !== null && (
                 <div className="rounded p-3 mt-3 border-2" style={{
                   background: 'rgba(0, 255, 255, 0.1)',
                   borderColor: 'var(--neon-cyan)',
@@ -192,12 +204,12 @@ export const GameHistory: React.FC<GameHistoryProps> = ({ onGameDeleted, onEditG
                     <span className="font-bold text-lg" style={{ 
                       color: 'var(--neon-yellow)',
                       textShadow: '0 0 10px var(--neon-yellow)'
-                    }}>{game.percentile?.toFixed(3) || 'N/A'}</span>
+                    }}>{game.percentile.toFixed(3)}</span>
                   </div>
                 </div>
               )}
 
-              {game.notes && (
+              {game.notes && game.source !== 'ifpa' && (
                 <div className="stat-card rounded p-3 mt-3">
                   <div className="text-xs mb-1" style={{ color: 'var(--neon-purple)' }}>Notes</div>
                   <div className="text-sm" style={{ color: 'var(--neon-cyan)' }}>{game.notes}</div>
