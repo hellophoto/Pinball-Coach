@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import type { Game, TableStrategy, Settings, PracticeSession } from './types';
+import type { Game, TableStrategy, Settings, PracticeSession, OPDBMachine } from './types';
 
 // ============================================================
 // HELPER: get current user id
@@ -402,6 +402,147 @@ export const getPracticeSessions = async (): Promise<PracticeSession[]> => {
     status: row.status,
     games: row.games,
   }));
+};
+// Recommendation Engine
+export const getRecommendations = async (): Promise<OPDBMachine[]> => {
+  try {
+    const [games, opdbMachines] = await Promise.all([
+      getGames(),
+      import('./services/opdbService').then(m => m.getOPDBMachines())
+    ]);
+
+    if (games.length === 0 || opdbMachines.length === 0) {
+      return [];
+    }
+
+    // Get user's played tables
+    const playedTables = new Set(games.map(g => g.table.toLowerCase()));
+    
+    // Get OPDB IDs for played games
+    const playedOPDBIds = new Set(
+      games
+        .filter(g => g.opdb_id)
+        .map(g => g.opdb_id!)
+    );
+
+    // Build user profile from played games
+    const userProfile = {
+      designers: new Map<string, number>(),
+      manufacturers: new Map<string, number>(),
+      themes: new Map<string, number>(),
+      years: new Map<number, number>(),
+      complexitySum: 0,
+      complexityCount: 0,
+    };
+
+    // Analyze played games
+    games.forEach(game => {
+      const machine = opdbMachines.find(m => 
+        m.name.toLowerCase() === game.table.toLowerCase() ||
+        m.opdb_id === game.opdb_id
+      );
+
+      if (!machine) return;
+
+      // Track designers
+      machine.designer?.forEach(designer => {
+        userProfile.designers.set(designer, (userProfile.designers.get(designer) || 0) + 1);
+      });
+
+      // Track manufacturers
+      if (machine.manufacturer) {
+        userProfile.manufacturers.set(
+          machine.manufacturer, 
+          (userProfile.manufacturers.get(machine.manufacturer) || 0) + 1
+        );
+      }
+
+      // Track themes
+      machine.theme?.forEach(theme => {
+        userProfile.themes.set(theme, (userProfile.themes.get(theme) || 0) + 1);
+      });
+
+      // Track years
+      if (machine.year) {
+        userProfile.years.set(machine.year, (userProfile.years.get(machine.year) || 0) + 1);
+      }
+
+      // Track complexity
+      if (machine.gameplay_complexity || machine.rule_complexity) {
+        const avgComplexity = (
+          (machine.gameplay_complexity || 0) + 
+          (machine.rule_complexity || 0)
+        ) / 2;
+        userProfile.complexitySum += avgComplexity;
+        userProfile.complexityCount++;
+      }
+    });
+
+    const avgComplexity = userProfile.complexityCount > 0 
+      ? userProfile.complexitySum / userProfile.complexityCount 
+      : 5;
+
+    // Score each unplayed machine
+    const recommendations = opdbMachines
+      .filter(machine => {
+        // Filter out played machines
+        if (playedOPDBIds.has(machine.opdb_id)) return false;
+        if (playedTables.has(machine.name.toLowerCase())) return false;
+        return true;
+      })
+      .map(machine => {
+        let score = 0;
+
+        // Designer match (highest weight)
+        machine.designer?.forEach(designer => {
+          const count = userProfile.designers.get(designer) || 0;
+          score += count * 10;
+        });
+
+        // Manufacturer match
+        if (machine.manufacturer) {
+          const count = userProfile.manufacturers.get(machine.manufacturer) || 0;
+          score += count * 5;
+        }
+
+        // Theme match
+        machine.theme?.forEach(theme => {
+          const count = userProfile.themes.get(theme) || 0;
+          score += count * 3;
+        });
+
+        // Year proximity (prefer similar eras)
+        if (machine.year) {
+          const yearScores = Array.from(userProfile.years.entries());
+          const avgYear = yearScores.reduce((sum, [year, count]) => sum + year * count, 0) / 
+            yearScores.reduce((sum, [, count]) => sum + count, 0);
+          
+          const yearDiff = Math.abs(machine.year - avgYear);
+          score += Math.max(0, 10 - yearDiff / 2); // Closer years = higher score
+        }
+
+        // Complexity match
+        if (machine.gameplay_complexity || machine.rule_complexity) {
+          const machineComplexity = (
+            (machine.gameplay_complexity || 0) + 
+            (machine.rule_complexity || 0)
+          ) / 2;
+          const complexityDiff = Math.abs(machineComplexity - avgComplexity);
+          score += Math.max(0, 5 - complexityDiff); // Similar complexity = higher score
+        }
+
+        return { machine, score };
+      })
+      .filter(r => r.score > 0) // Only include machines with some match
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 20) // Top 20 recommendations
+      .map(r => r.machine);
+
+    return recommendations;
+  } catch (error) {
+    console.error('Error generating recommendations:', error);
+    return [];
+  }
 };
 
 // ============================================================

@@ -7,9 +7,10 @@ import { Dashboard } from './components/Dashboard';
 import { GameHistory } from './components/GameHistory';
 import { Settings } from './components/Settings';
 import { PracticeSession } from './components/PracticeSession';
+import { Discover } from './components/Discover';
 import './App.css';
 
-type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice';
+type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice' | 'discover';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -120,6 +121,14 @@ function App() {
               view === 'history' ? 'nav-button-active' : ''
             }`}
           >
+            <button
+            onClick={() => { setView('discover'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'discover' ? 'nav-button-active' : ''
+            }`}
+          >
+            Discover
+          </button>
             History
           </button>
           <button
@@ -148,6 +157,7 @@ function App() {
       <GameHistory onGameDeleted={handleGameDeleted} onEditGame={handleEditGame} />
     </div>
   )}
+  {view === 'discover' && <Discover />}
   {view === 'settings' && <Settings />}
   {view === 'practice' && (
     <div>
