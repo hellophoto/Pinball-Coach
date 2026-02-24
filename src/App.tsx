@@ -116,20 +116,20 @@ function App() {
             Practice
           </button>
           <button
-            onClick={() => { setView('history'); setEditGameId(undefined); }}
-            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-              view === 'history' ? 'nav-button-active' : ''
-            }`}
-          >
-            Discover
-            </button>
-            <button
             onClick={() => { setView('discover'); setEditGameId(undefined); }}
             className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
               view === 'discover' ? 'nav-button-active' : ''
             }`}
           >
-          History
+            Discover
+          </button>
+          <button
+            onClick={() => { setView('history'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'history' ? 'nav-button-active' : ''
+            }`}
+          >
+            History
           </button>
           <button
             onClick={() => { setView('settings'); setEditGameId(undefined); }}
