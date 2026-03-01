@@ -59,7 +59,8 @@ export interface Settings {
     region?: string;
   };
   pinballMapLastUpdated?: number;
-  ifpaPlayerId?: string; // ADD THIS LINE
+  ifpaPlayerId?: string;
+  leaguePlayerId?: string; // ADD THIS LINE
 }
 
 // OPDB types
@@ -104,4 +105,26 @@ export interface PracticeSession {
     };
     notes?: string;
   }>;
+}
+// League types
+export interface LeagueStats {
+  playerId: string;
+  season: string;
+  wins: number;
+  losses: number;
+  points: number;
+  rank?: number;
+  machineStats: Array<{
+    machine: string;
+    wins: number;
+    losses: number;
+    winRate: number;
+    avgScore?: number;
+  }>;
+  leagueAverages: Array<{
+    machine: string;
+    avgScore: number;
+    gamesPlayed: number;
+  }>;
+  lastSynced: number;
 }

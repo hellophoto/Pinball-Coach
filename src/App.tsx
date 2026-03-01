@@ -9,8 +9,9 @@ import { Settings } from './components/Settings';
 import { PracticeSession } from './components/PracticeSession';
 import { Discover } from './components/Discover';
 import './App.css';
+import { League } from './components/League';
 
-type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice' | 'discover';
+type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice' | 'discover' | 'league';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -139,6 +140,14 @@ function App() {
           >
             Settings
           </button>
+          <button
+          onClick={() => { setView('league'); setEditGameId(undefined); }}
+          className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+            view === 'league' ? 'nav-button-active' : ''
+          }`}
+          > 
+            League
+          </button>
         </nav>
         </div>
       </header>
@@ -157,6 +166,7 @@ function App() {
       <GameHistory onGameDeleted={handleGameDeleted} onEditGame={handleEditGame} />
     </div>
   )}
+  {view === 'league' && <League />}
   {view === 'discover' && <Discover />}
   {view === 'settings' && <Settings />}
   {view === 'practice' && (

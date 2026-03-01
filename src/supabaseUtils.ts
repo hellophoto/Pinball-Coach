@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
-import type { Game, TableStrategy, Settings, PracticeSession, OPDBMachine } from './types';
+import type { Game, TableStrategy, Settings, PracticeSession, OPDBMachine, LeagueStats } from './types';
+import { parseLeagueCSV } from './leagueParser';
 
 // ============================================================
 // HELPER: get current user id
@@ -253,7 +254,8 @@ export const deleteTableStrategy = async (tableName: string): Promise<void> => {
 // ============================================================
 const DEFAULT_SETTINGS: Settings = {
   location: { city: 'Portland', state: 'OR', radius: 25 },
-  ifpaPlayerId: undefined, // ADD THIS LINE
+  ifpaPlayerId: undefined,
+  leaguePlayerId: undefined,
 };
 
 export const getSettings = async (): Promise<Settings> => {
@@ -279,7 +281,8 @@ export const getSettings = async (): Promise<Settings> => {
     pinballMapLastUpdated: data.pinball_map_last_updated
       ? new Date(data.pinball_map_last_updated).getTime()
       : undefined,
-    ifpaPlayerId: data.ifpa_player_id, // ADD THIS LINE
+    ifpaPlayerId: data.ifpa_player_id,
+    leaguePlayerId: data.league_player_id,
   };
 };
 
@@ -299,12 +302,16 @@ export const saveSettings = async (settings: Settings): Promise<void> => {
       pinball_map_last_updated: settings.pinballMapLastUpdated
         ? new Date(settings.pinballMapLastUpdated).toISOString()
         : null,
-      ifpa_player_id: settings.ifpaPlayerId, // ADD THIS LINE
+      ifpa_player_id: settings.ifpaPlayerId,
+      league_player_id: settings.leaguePlayerId,
     }, { onConflict: 'user_id' });
 
   if (error) console.error('Error saving settings:', error);
 };
-// Practice Sessions
+
+// ============================================================
+// PRACTICE SESSIONS
+// ============================================================
 export const createPracticeSession = async (venue: string): Promise<PracticeSession> => {
   const userId = await getUserId();
   const now = new Date().toISOString();
@@ -403,7 +410,10 @@ export const getPracticeSessions = async (): Promise<PracticeSession[]> => {
     games: row.games,
   }));
 };
-// Recommendation Engine
+
+// ============================================================
+// RECOMMENDATION ENGINE
+// ============================================================
 export const getRecommendations = async (): Promise<OPDBMachine[]> => {
   try {
     const [games, opdbMachines] = await Promise.all([
@@ -546,7 +556,63 @@ export const getRecommendations = async (): Promise<OPDBMachine[]> => {
 };
 
 // ============================================================
-// KEEP these from utils.ts — no migration needed
+// LEAGUE STATS
+// ============================================================
+export const importLeagueCSV = async (csvText: string, playerName: string): Promise<void> => {
+  const userId = await getUserId();
+  
+  const stats = parseLeagueCSV(csvText, playerName);
+  stats.playerId = playerName;
+  
+  const { error } = await supabase
+    .from('league_stats')
+    .upsert({
+      user_id: userId,
+      player_id: playerName,
+      season: stats.season,
+      wins: stats.wins,
+      losses: stats.losses,
+      points: stats.points,
+      rank: stats.rank,
+      machine_stats: stats.machineStats,
+      league_averages: stats.leagueAverages,
+      last_synced: new Date().toISOString(),
+    }, { onConflict: 'user_id,season' });
+  
+  if (error) throw error;
+};
+
+export const getLeagueStats = async (): Promise<LeagueStats[]> => {
+  const userId = await getUserId();
+  
+  const { data, error } = await supabase
+    .from('league_stats')
+    .select('*')
+    .eq('user_id', userId)
+    .order('season', { ascending: false });
+  
+  if (error || !data) return [];
+  
+  return data.map(row => ({
+    playerId: row.player_id,
+    season: row.season,
+    wins: row.wins,
+    losses: row.losses,
+    points: row.points,
+    rank: row.rank,
+    machineStats: row.machine_stats,
+    leagueAverages: row.league_averages,
+    lastSynced: new Date(row.last_synced).getTime(),
+  }));
+};
+
+export const getCurrentSeasonStats = async (): Promise<LeagueStats | null> => {
+  const stats = await getLeagueStats();
+  return stats.length > 0 ? stats[0] : null;
+};
+
+// ============================================================
+// UTILITIES
 // ============================================================
 export const formatScore = (score: number): string => {
   if (score >= 1_000_000_000) {
