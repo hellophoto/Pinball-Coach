@@ -235,42 +235,44 @@ export const Insights: React.FC = () => {
               className="card-synthwave rounded-lg p-4 shadow-lg cursor-pointer transition hover:scale-[1.02]"
               onClick={() => setSelectedMachine(isExpanded ? null : insight)}
             >
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-mono" style={{ color: 'var(--neon-purple)' }}>
-                      #{index + 1}
-                    </span>
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--neon-cyan)' }}>
-                      {insight.machine}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span 
-                      className="px-2 py-1 text-xs rounded border-2"
-                      style={{
-                        background: colors.bg,
-                        borderColor: colors.border,
-                        color: colors.text,
-                      }}
-                    >
-                      {getPriorityLabel(insight.recommendation)}
-                    </span>
-                    <span className="text-sm" style={{ color: 'var(--neon-purple)' }}>
-                      {(insight.winRate * 100).toFixed(0)}% win rate • {insight.gamesPlayed} games
-                    </span>
-                  </div>
+            <div className="flex items-start justify-between gap-4 mb-2">
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-mono" style={{ color: 'var(--neon-purple)' }}>
+                    #{index + 1}
+                </span>
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--neon-cyan)' }}>
+                    {insight.machine}
+                </h3>
                 </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                <span 
+                    className="px-2 py-1 text-xs rounded border-2"
+                    style={{
+                    background: colors.bg,
+                    borderColor: colors.border,
+                    color: colors.text,
+                    }}
+                >
+                    {getPriorityLabel(insight.recommendation)}
+                </span>
+                <span className="text-sm" style={{ color: 'var(--neon-purple)' }}>
+                    {(insight.winRate * 100).toFixed(0)}% win rate • {insight.gamesPlayed} games
+                </span>
+                </div>
+            </div>
+            <div className="flex items-center">
                 <svg 
-                    className={`w-3 h-3 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
-                    style={{ color: 'var(--neon-cyan)' }}
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                    >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+                className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                style={{ color: 'var(--neon-cyan)' }}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+                >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              </div>
+            </div>
+            </div>
 
               {isExpanded && (
                 <div className="mt-4 pt-4 border-t-2" style={{ borderColor: 'rgba(139, 0, 255, 0.3)' }}>
