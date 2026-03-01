@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import type { PinballMapLocation, PracticeSession } from '../types';
 import { getLeagueStats, getPracticeSessions, getSettings } from '../supabaseUtils';
 import { getPinballMapLocations } from '../services/pinballMapService';
 
