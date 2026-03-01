@@ -444,6 +444,19 @@ export const Settings: React.FC = () => {
               >
                 🗑️ Clear Cache
               </button>
+              <button
+              onClick={async () => {
+                try {
+                  await saveSettings(settings);
+                  setLocationMessage('✅ Settings saved successfully!');
+                } catch (error) {
+                  setLocationMessage('❌ Error saving settings');
+                }
+              }}
+              className="w-full button-primary py-2 rounded font-semibold text-sm mt-3"
+              > 
+              💾 Save Settings
+              </button>
             </div>
           </div>
         </div>
