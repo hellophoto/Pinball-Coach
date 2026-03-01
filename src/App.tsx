@@ -12,8 +12,9 @@ import './App.css';
 import { League } from './components/League';
 import { FAB } from './components/FAB';
 import { QuickAdd } from './components/QuickAdd';
+import { Insights } from './components/Insights';
 
-type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice' | 'discover' | 'league';
+type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice' | 'discover' | 'league' | 'insights';
 
 function App() {
   const [session, setSession] = useState<Session | null>(null);
@@ -109,6 +110,14 @@ function App() {
               view === 'form' ? 'nav-button-active' : ''
             }`}
           >
+            <button
+            onClick={() => { setView('insights'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'insights' ? 'nav-button-active' : ''
+            }`}
+          >
+            Insights
+          </button>
             Add Game
           </button>
           <button
@@ -170,6 +179,7 @@ function App() {
     </div>
   )}
   {view === 'league' && <League />}
+  {view === 'insights' && <Insights />}
   {view === 'discover' && <Discover />}
   {view === 'settings' && <Settings />}
   {view === 'practice' && (
