@@ -262,13 +262,13 @@ export const Insights: React.FC = () => {
                   </div>
                 </div>
                 <svg 
-                  className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                  style={{ color: 'var(--neon-cyan)' }}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    className={`w-3 h-3 transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}
+                    style={{ color: 'var(--neon-cyan)' }}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
 
