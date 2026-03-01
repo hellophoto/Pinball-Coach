@@ -324,54 +324,7 @@ export const Settings: React.FC = () => {
                 className="w-full input-synthwave rounded px-4 py-2"
               />
             </div>
-            
-            {/* IFPA Player ID */}
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
-                IFPA Player ID (Optional)
-              </label>
-              <input
-                type="text"
-                value={settings.ifpaPlayerId || ''}
-                onChange={(e) => setSettingsState({
-                  ...settings,
-                  ifpaPlayerId: e.target.value
-                })}
-                placeholder="12345"
-                className="w-full input-synthwave rounded px-4 py-2"
-              />
-              <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
-                Find your player ID at{' '}
-                <a
-                  href="https://www.ifpapinball.com/players.php"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline"
-                  style={{ color: 'var(--neon-cyan)' }}
-                >
-                  ifpapinball.com
-                </a>
-              </p>
-            </div>
-                {/* League Player ID */}
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
-                League Player ID (Optional)
-              </label>
-              <input
-                type="text"
-                value={settings.leaguePlayerId || ''}
-                onChange={(e) => setSettingsState({
-                  ...settings,
-                  leaguePlayerId: e.target.value
-                })}
-                placeholder="Dominique Whittaker"
-                className="w-full input-synthwave rounded px-4 py-2"
-              />
-              <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
-                Your full name as it appears in the league CSV
-              </p>
-            </div>
+
             <div>
               <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
                 Search Radius (miles)
@@ -444,21 +397,82 @@ export const Settings: React.FC = () => {
               >
                 🗑️ Clear Cache
               </button>
-              <button
-              onClick={async () => {
-                try {
-                  await saveSettings(settings);
-                  setLocationMessage('✅ Settings saved successfully!');
-                } catch (error) {
-                  setLocationMessage('❌ Error saving settings');
-                }
-              }}
-              className="w-full button-primary py-2 rounded font-semibold text-sm mt-3"
-              > 
-              💾 Save Settings
-              </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Player IDs Section */}
+      <div className="card-synthwave rounded-lg p-6">
+        <h3 className="text-lg font-semibold mb-4" style={{ 
+          color: 'var(--neon-magenta)',
+          textShadow: '0 0 10px var(--neon-magenta)'
+        }}>Player IDs</h3>
+        
+        <div className="space-y-4">
+          {/* IFPA Player ID */}
+          <div>
+            <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
+              IFPA Player ID (Optional)
+            </label>
+            <input
+              type="text"
+              value={settings.ifpaPlayerId || ''}
+              onChange={(e) => setSettingsState({
+                ...settings,
+                ifpaPlayerId: e.target.value
+              })}
+              placeholder="12345"
+              className="w-full input-synthwave rounded px-4 py-2"
+            />
+            <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
+              Find your player ID at{' '}
+              <a
+                href="https://www.ifpapinball.com/players.php"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+                style={{ color: 'var(--neon-cyan)' }}
+              >
+                ifpapinball.com
+              </a>
+            </p>
+          </div>
+
+          {/* League Player ID */}
+          <div>
+            <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
+              League Player ID (Optional)
+            </label>
+            <input
+              type="text"
+              value={settings.leaguePlayerId || ''}
+              onChange={(e) => setSettingsState({
+                ...settings,
+                leaguePlayerId: e.target.value
+              })}
+              placeholder="Dominique Whittaker"
+              className="w-full input-synthwave rounded px-4 py-2"
+            />
+            <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
+              Your full name as it appears in the league CSV
+            </p>
+          </div>
+
+          {/* Save Button */}
+          <button
+            onClick={async () => {
+              try {
+                await saveSettings(settings);
+                setLocationMessage('✅ Player IDs saved successfully!');
+              } catch (error) {
+                setLocationMessage('❌ Error saving player IDs');
+              }
+            }}
+            className="w-full button-primary py-3 rounded font-semibold"
+          >
+            💾 Save Player IDs
+          </button>
         </div>
       </div>
 
