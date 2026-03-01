@@ -353,7 +353,25 @@ export const Settings: React.FC = () => {
                 </a>
               </p>
             </div>
-
+                {/* League Player ID */}
+            <div>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
+                League Player ID (Optional)
+              </label>
+              <input
+                type="text"
+                value={settings.leaguePlayerId || ''}
+                onChange={(e) => setSettingsState({
+                  ...settings,
+                  leaguePlayerId: e.target.value
+                })}
+                placeholder="Dominique Whittaker"
+                className="w-full input-synthwave rounded px-4 py-2"
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--neon-purple)', opacity: 0.7 }}>
+                Your full name as it appears in the league CSV
+              </p>
+            </div>
             <div>
               <label className="block mb-2 text-sm" style={{ color: 'var(--neon-cyan)' }}>
                 Search Radius (miles)
