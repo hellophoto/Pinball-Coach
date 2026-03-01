@@ -10,6 +10,8 @@ import { PracticeSession } from './components/PracticeSession';
 import { Discover } from './components/Discover';
 import './App.css';
 import { League } from './components/League';
+import { FAB } from './components/FAB';
+import { QuickAdd } from './components/QuickAdd';
 
 type View = 'form' | 'dashboard' | 'history' | 'settings' | 'practice' | 'discover' | 'league';
 
@@ -19,6 +21,7 @@ function App() {
   const [view, setView] = useState<View>('dashboard');
   const [refreshKey, setRefreshKey] = useState(0);
   const [editGameId, setEditGameId] = useState<string | undefined>(undefined);
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -176,6 +179,15 @@ function App() {
     </div>
   )}
     </main>
+        {/* Floating Action Button */}
+    <FAB onClick={() => setShowQuickAdd(true)} />
+
+    {/* Quick Add Modal */}
+    <QuickAdd 
+      isOpen={showQuickAdd}
+      onClose={() => setShowQuickAdd(false)}
+      onGameAdded={handleGameAdded}
+    />
     </div>
   );
 }
