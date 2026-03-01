@@ -105,12 +105,6 @@ function App() {
             Dashboard
           </button>
           <button
-            onClick={() => { setView('form'); setEditGameId(undefined); }}
-            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-              view === 'form' ? 'nav-button-active' : ''
-            }`}
-          >
-            <button
             onClick={() => { setView('insights'); setEditGameId(undefined); }}
             className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
               view === 'insights' ? 'nav-button-active' : ''
@@ -118,6 +112,12 @@ function App() {
           >
             Insights
           </button>
+          <button
+            onClick={() => { setView('form'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'form' ? 'nav-button-active' : ''
+            }`}
+          >
             Add Game
           </button>
           <button
@@ -145,20 +145,20 @@ function App() {
             History
           </button>
           <button
+            onClick={() => { setView('league'); setEditGameId(undefined); }}
+            className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
+              view === 'league' ? 'nav-button-active' : ''
+            }`}
+          >
+            League
+          </button>
+          <button
             onClick={() => { setView('settings'); setEditGameId(undefined); }}
             className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
               view === 'settings' ? 'nav-button-active' : ''
             }`}
           >
             Settings
-          </button>
-          <button
-          onClick={() => { setView('league'); setEditGameId(undefined); }}
-          className={`flex-1 w-full py-3 px-4 rounded-lg font-semibold text-sm sm:text-base nav-button ${
-            view === 'league' ? 'nav-button-active' : ''
-          }`}
-          > 
-            League
           </button>
         </nav>
         </div>
