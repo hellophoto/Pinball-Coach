@@ -182,12 +182,7 @@ function App() {
   {view === 'insights' && <Insights />}
   {view === 'discover' && <Discover />}
   {view === 'settings' && <Settings />}
-  {view === 'practice' && (
-    <div>
-      <p style={{ color: 'red' }}>PRACTICE VIEW LOADED</p>
-      <PracticeSession />
-    </div>
-  )}
+  {view === 'practice' && <PracticeSession />}
     </main>
         {/* Floating Action Button */}
     <FAB onClick={() => setShowQuickAdd(true)} />
